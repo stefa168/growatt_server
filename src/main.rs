@@ -1,17 +1,33 @@
 use std::error::Error;
-use std::future::Future;
 use std::net::SocketAddr;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
-use tokio::sync::broadcast;
 use futures::FutureExt;
+use tokio::task::JoinSet;
+use tokio_util::sync::CancellationToken;
 use types::MessageType;
 
 mod types;
 
 const BUF_SIZE: usize = 65535;
 
-async fn copy_with_abort<R, W>(read: &mut R, write: &mut W, mut abort: broadcast::Receiver<()>, print_data: bool) -> tokio::io::Result<usize>
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
+    // https://github.com/mqudsi/tcpproxy/blob/master/src/main.rs
+    let listener = TcpListener::bind("0.0.0.0:5279").await?;
+    println!("Listening on {}", listener.local_addr().unwrap());
+
+
+
+    loop {
+        let (client, client_addr) = listener.accept().await?;
+        tokio::spawn(handle_connection(client, client_addr));
+    }
+
+}
+
+
+async fn copy_with_abort<R, W>(read: &mut R, write: &mut W, abort: CancellationToken, print_data: bool) -> tokio::io::Result<usize>
     where R: tokio::io::AsyncRead + Unpin, W: tokio::io::AsyncWrite + Unpin {
     let mut bytes_forwarded = 0;
     let mut buf = [0u8; BUF_SIZE];
@@ -22,13 +38,13 @@ async fn copy_with_abort<R, W>(read: &mut R, write: &mut W, mut abort: broadcast
                 biased;
 
                 result = read.read(&mut buf) => {
-                    use std::io::ErrorKind::{ConnectionReset, ConnectionAborted};
-                    bytes_read = result.or_else(|e| match e.kind() {
+                    // use std::io::ErrorKind::{ConnectionReset, ConnectionAborted};
+                    bytes_read = result?;/*.or_else(|e| match e.kind() {
                         ConnectionReset | ConnectionAborted => Ok(0),
                         _ => Err(e)
-                    })?;
+                    })?;*/
                 },
-                _ = abort.recv() => {
+                _ = abort.cancelled() => {
                     break;
                 }
             }
@@ -49,19 +65,6 @@ async fn copy_with_abort<R, W>(read: &mut R, write: &mut W, mut abort: broadcast
     Ok(bytes_forwarded)
 }
 
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
-    // https://github.com/mqudsi/tcpproxy/blob/master/src/main.rs
-    let listener = TcpListener::bind("0.0.0.0:5279").await?;
-    println!("Listening on {}", listener.local_addr().unwrap());
-
-    loop {
-        let (client, client_addr) = listener.accept().await?;
-        tokio::spawn(handle_connection(client, client_addr));
-    }
-}
-
 async fn handle_connection(mut client_stream: TcpStream, client_addr: SocketAddr) -> () {
     println!("New connection from {}", client_addr);
 
@@ -76,14 +79,18 @@ async fn handle_connection(mut client_stream: TcpStream, client_addr: SocketAddr
     let (mut client_read, mut client_write) = client_stream.split();
     let (mut remote_read, mut remote_write) = remote_server.split();
 
-    let (cancel, _) = broadcast::channel(1);
+    let cancellation_token = CancellationToken::new();
 
+    let c3 = cancellation_token.clone();
+
+    // add a wrapping tokio::select! to the tokio join in order to wait for ctrl_c
+    // signal::ctrl_c().await?;
     let (remote_copied, client_copied) = tokio::join! {
-                copy_with_abort(&mut remote_read, &mut client_write, cancel.subscribe(), false).then(|r| {
-                    let _ = cancel.send(()); async {r}
+                copy_with_abort(&mut remote_read, &mut client_write, cancellation_token.clone(), false).then(|r| {
+                    let _ = c3.cancel(); async {r}
                 }),
-                copy_with_abort(&mut client_read, &mut remote_write, cancel.subscribe(), true).then(|r| {
-                    let _ = cancel.send(()); async {r}
+                copy_with_abort(&mut client_read, &mut remote_write, cancellation_token.clone(), true).then(|r| {
+                    let _ = c3.cancel(); async {r}
                 })
             };
 
