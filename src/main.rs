@@ -1,9 +1,12 @@
 use std::error::Error;
+use std::io;
 use std::net::SocketAddr;
+use std::process::exit;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 use futures::FutureExt;
-use tokio::task::JoinSet;
+use tokio::signal;
+use tokio::task::{JoinHandle};
 use tokio_util::sync::CancellationToken;
 use types::MessageType;
 
@@ -17,13 +20,22 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let listener = TcpListener::bind("0.0.0.0:5279").await?;
     println!("Listening on {}", listener.local_addr().unwrap());
 
+    let _listener_task: JoinHandle<io::Result<()>> = tokio::spawn(async move {
+        loop {
+            let (client, client_addr) = listener.accept().await?;
+            tokio::spawn(handle_connection(client, client_addr));
+        };
+    });
 
-
-    loop {
-        let (client, client_addr) = listener.accept().await?;
-        tokio::spawn(handle_connection(client, client_addr));
+    if let Err(err) = signal::ctrl_c().await {
+        eprintln!("Unable to listen for shutdown signal: {}", err);
+        return Err(Box::try_from(err).unwrap());
+        // we also shut down in case of error
+    } else {
+        println!("Received shutdown signal. Stopping.");
     }
 
+    Ok(())
 }
 
 
