@@ -261,16 +261,16 @@ fn old_main() -> Result<(), String> {
     Ok(())
 }
 
-fn decrypt(decdata: &[u8]) -> Vec<u8> {
-    let ndecdata = decdata.len();
+fn decrypt(data: &[u8]) -> Vec<u8> {
+    let ndecdata = data.len();
     let mask = b"Growatt";
 
     // Start the decrypt routine
-    let mut unscrambled: Vec<u8> = decdata[..8].to_vec(); // Take the unscramble header
+    let mut unscrambled: Vec<u8> = data[..8].to_vec(); // Isolate the unscrambled header
 
-    for (i, j) in (8..ndecdata).zip((0..).cycle().take(ndecdata - 8)) {
-        let xor_value = decdata[i] ^ mask[j % mask.len()];
-        unscrambled.push(xor_value);
+    for (i, j) in (8..ndecdata).zip((0..mask.len()).cycle()) {
+        let dec_byte = data[i] ^ mask[j];
+        unscrambled.push(dec_byte);
     }
 
     unscrambled
