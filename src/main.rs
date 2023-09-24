@@ -119,7 +119,7 @@ impl ConnectionHandler {
     fn handle_data<'a>(&self, data: &'a [u8]) -> &'a [u8] {
         let bytes = unscramble_data(data);
 
-        println!("{}", bytes.iter().map(|b| format!("{:02x}", b)).collect::<String>());
+        println!("New message! {}", bytes.iter().map(|b| format!("{:02x}", b)).collect::<String>());
 
         let data_length = u16::from_be_bytes(bytes[4..6].try_into().unwrap());
 
@@ -146,8 +146,12 @@ impl ConnectionHandler {
 
                 match fragment.fragment_type {
                     Datatype::String => {
-                        // todo remove other stuff from the string that isn't readable characters...
-                        println!("{}: {}", fragment.name, hex_bytes_to_ascii(&slice).trim());
+                        println!("{}: {}",
+                                 fragment.name,
+                                 hex_bytes_to_ascii(&slice)
+                                     .chars()
+                                     .filter(|c| c.is_alphanumeric()).collect::<String>()
+                        );
                     }
                     Datatype::Date => {
                         if slice.len() < 6 {
