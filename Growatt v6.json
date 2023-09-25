@@ -142,14 +142,556 @@
     "type": "float",
     "fraction": 10
   },
-  {"name":"PV Frequency"      ,"offset" :145, "length" : 2, "type" : "float", "fraction" : 100},
-  {"name":"P1 Grid Voltage"     ,"offset" :147, "length" : 2, "type" : "float", "fraction" : 10},
-  {"name":"P1 Grid Current"     ,"offset" :149, "length" : 2, "type" : "float", "fraction" : 10},
-  {"name":"P1 Grid Power"       ,"offset" :151, "length" : 4, "type" : "float", "fraction" : 10},
-  {"name":"P2 Grid Voltage"    ,"offset" :155, "length" : 2, "type" : "float", "fraction" : 10},
-  {"name":"P2 Grid Current"    ,"offset" :157, "length" : 2, "type" : "float", "fraction" : 10},
-  {"name":"P2 Grid Power"      ,"offset" :159, "length" : 4, "type" : "float", "fraction" : 10},
-  {"name":"P3 Grid Voltage"    ,"offset" :163, "length" : 2, "type" : "float", "fraction" : 10},
-  {"name":"P3 Grid Current"    ,"offset" :165, "length" : 2, "type" : "float", "fraction" : 10},
-  {"name":"P3 Grid Power"      ,"offset" :167, "length" : 4, "type" : "float", "fraction" : 10}
+  {
+    "name": "PV Frequency",
+    "offset": 145,
+    "length": 2,
+    "type": "float",
+    "fraction": 100
+  },
+  {
+    "name": "P1 Grid Voltage",
+    "offset": 147,
+    "length": 2,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "P1 Grid Current",
+    "offset": 149,
+    "length": 2,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "P1 Grid Power",
+    "offset": 151,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "P2 Grid Voltage",
+    "offset": 155,
+    "length": 2,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "P2 Grid Current",
+    "offset": 157,
+    "length": 2,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "P2 Grid Power",
+    "offset": 159,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "P3 Grid Voltage",
+    "offset": 163,
+    "length": 2,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "P3 Grid Current",
+    "offset": 165,
+    "length": 2,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "P3 Grid Power",
+    "offset": 167,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "Total Online Time",
+    "offset": 135,
+    "length": 4,
+    "type": "float",
+    "fraction": 1
+  },
+  {
+    "name": "eactoday",
+    "offset": 177,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "pvenergytoday",
+    "offset": 177,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "eactotal",
+    "offset": 181,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "epvtotal",
+    "offset": 253,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "epv1today",
+    "offset": 189,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "epv1total",
+    "offset": 193,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "epv2today",
+    "offset": 201,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "epv2total",
+    "offset": 205,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "epv3today",
+    "offset": 209,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "epv3total",
+    "offset": 213,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "epv4today",
+    "offset": 217,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "epv4total",
+    "offset": 221,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "epv5today",
+    "offset": 225,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "epv5total",
+    "offset": 229,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "pvtemperature",
+    "offset": 257,
+    "length": 2,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "pvipmtemperature",
+    "offset": 259,
+    "length": 2,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "pvboosttemp",
+    "offset": 261,
+    "length": 2,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "bat_dsp",
+    "offset": 265,
+    "length": 2,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "pbusvolt",
+    "offset": 267,
+    "length": 2,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "#nbusvolt",
+    "offset": 269,
+    "length": 2,
+    "type": "float",
+    "fraction": 10,
+    "incl": "no"
+  },
+  {
+    "name": "#ipf",
+    "offset": 271,
+    "length": 2,
+    "type": "float",
+    "fraction": 10,
+    "incl": "no"
+  },
+  {
+    "name": "#realoppercent",
+    "offset": 273,
+    "length": 2,
+    "type": "float",
+    "fraction": 100,
+    "incl": "no"
+  },
+  {
+    "name": "#opfullwatt",
+    "offset": 275,
+    "length": 4,
+    "type": "float",
+    "fraction": 10,
+    "incl": "no"
+  },
+  {
+    "name": "#deratingmode",
+    "offset": 279,
+    "length": 2,
+    "type": "float",
+    "fraction": 1,
+    "incl": "no"
+  },
+  {
+    "name": "eacharge_today",
+    "offset": 295,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "eacharge_total",
+    "offset": 299,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "batterytype",
+    "offset": 309,
+    "length": 2,
+    "type": "float",
+    "fraction": 1
+  },
+  {
+    "name": "uwsysworkmode",
+    "offset": 325,
+    "length": 2,
+    "type": "float",
+    "fraction": 1
+  },
+  {
+    "name": "systemfaultword0",
+    "offset": 327,
+    "length": 2,
+    "type": "float",
+    "fraction": 1
+  },
+  {
+    "name": "systemfaultword1",
+    "offset": 329,
+    "length": 2,
+    "type": "float",
+    "fraction": 1
+  },
+  {
+    "name": "systemfaultword2",
+    "offset": 331,
+    "length": 2,
+    "type": "float",
+    "fraction": 1
+  },
+  {
+    "name": "systemfaultword3",
+    "offset": 333,
+    "length": 2,
+    "type": "float",
+    "fraction": 1
+  },
+  {
+    "name": "systemfaultword4",
+    "offset": 335,
+    "length": 2,
+    "type": "float",
+    "fraction": 1
+  },
+  {
+    "name": "systemfaultword5",
+    "offset": 337,
+    "length": 2,
+    "type": "float",
+    "fraction": 1
+  },
+  {
+    "name": "systemfaultword6",
+    "offset": 339,
+    "length": 2,
+    "type": "float",
+    "fraction": 1
+  },
+  {
+    "name": "systemfaultword7",
+    "offset": 341,
+    "length": 2,
+    "type": "float",
+    "fraction": 1
+  },
+  {
+    "name": "pdischarge1",
+    "offset": 343,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "p1charge1",
+    "offset": 347,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "vbat",
+    "offset": 351,
+    "length": 2,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "SOC",
+    "offset": 353,
+    "length": 2,
+    "type": "float",
+    "fraction": 100
+  },
+  {
+    "name": "pactouserr",
+    "offset": 355,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "#pactousers",
+    "offset": 359,
+    "length": 4,
+    "type": "float",
+    "fraction": 10,
+    "incl": "no"
+  },
+  {
+    "name": "#pactousert",
+    "offset": 363,
+    "length": 4,
+    "type": "float",
+    "fraction": 10,
+    "incl": "no"
+  },
+  {
+    "name": "pactousertot",
+    "offset": 367,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "pactogridr",
+    "offset": 371,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "#pactogrids",
+    "offset": 375,
+    "length": 4,
+    "type": "float",
+    "fraction": 10,
+    "incl": "no"
+  },
+  {
+    "name": "#pactogridt",
+    "offset": 379,
+    "length": 4,
+    "type": "float",
+    "fraction": 10,
+    "incl": "no"
+  },
+  {
+    "name": "pactogridtot",
+    "offset": 383,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "plocaloadr",
+    "offset": 387,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "#plocaloads",
+    "offset": 391,
+    "length": 4,
+    "type": "float",
+    "fraction": 10,
+    "incl": "no"
+  },
+  {
+    "name": "#plocaloadt",
+    "offset": 395,
+    "length": 4,
+    "type": "float",
+    "fraction": 10,
+    "incl": "no"
+  },
+  {
+    "name": "plocaloadtot",
+    "offset": 399,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "#ipm",
+    "offset": 403,
+    "length": 2,
+    "type": "float",
+    "fraction": 10,
+    "incl": "no"
+  },
+  {
+    "name": "#battemp",
+    "offset": 405,
+    "length": 2,
+    "type": "float",
+    "fraction": 10,
+    "incl": "no"
+  },
+  {
+    "name": "spdspstatus",
+    "offset": 407,
+    "length": 2,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "spbusvolt",
+    "offset": 409,
+    "length": 2,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "etouser_tod",
+    "offset": 413,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "etouser_tot",
+    "offset": 417,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "etogrid_tod",
+    "offset": 421,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "etogrid_tot",
+    "offset": 425,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "edischarge1_tod",
+    "offset": 429,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "edischarge1_tot",
+    "offset": 433,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "eharge1_tod",
+    "offset": 437,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "eharge1_tot",
+    "offset": 441,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "elocalload_tod",
+    "offset": 445,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  },
+  {
+    "name": "elocalload_tot",
+    "offset": 449,
+    "length": 4,
+    "type": "float",
+    "fraction": 10
+  }
 ]
