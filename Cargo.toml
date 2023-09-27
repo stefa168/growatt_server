@@ -2,6 +2,14 @@
 name = "growatt_server"
 version = "0.1.0"
 edition = "2021"
+authors = ["Stefano Vittorio Porta <stefa168@hotmail.it>"]
+repository = "https://github.com/stefa168/growatt_server"
+license = "GPL-3-or-later"
+keywords = ["growatt", "inverter", "server", "proxy", "offline"]
+
+[[bin]]
+name = "growatt_server"
+path = "src/main.rs"
 
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
