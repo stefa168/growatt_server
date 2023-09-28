@@ -40,12 +40,12 @@ pub struct GrowattV6EnergyFragment {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    let json = fs::read_to_string("./inverters/Growatt v6.json").await?;
+    let inverter: Arc<Vec<GrowattV6EnergyFragment>> = Arc::new(serde_json::from_str(&json)?);
+
     // https://github.com/mqudsi/tcpproxy/blob/master/src/main.rs
     let listener = TcpListener::bind("0.0.0.0:5279").await?;
     println!("Listening on {}", listener.local_addr().unwrap());
-
-    let json = fs::read_to_string("./Growatt v6.json").await?;
-    let inverter: Arc<Vec<GrowattV6EnergyFragment>> = Arc::new(serde_json::from_str(&json)?);
 
     let _listener_task: JoinHandle<io::Result<()>> = tokio::spawn(async move {
         loop {

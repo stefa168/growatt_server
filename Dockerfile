@@ -1,13 +1,11 @@
 FROM rust:slim-bookworm as builder
-WORKDIR /usr/src/growatt_server
-#COPY ./src/* ./src/*
-#COPY Cargo.* .
+WORKDIR /usr/src/growatt_server/
 COPY . .
-RUN cargo build --release
-#RUN cargo install --path .
-#CMD ["./target/release/growatt_server"]
+RUN cargo install --path .
 
 FROM debian:bookworm-slim
-COPY --from=builder ./target/release/growatt_server ./server/growatt_server
+WORKDIR /usr/local/bin/
+COPY --from=builder /usr/local/cargo/bin/growatt_server /usr/local/bin/growatt_server
 EXPOSE 5279/tcp
-CMD ["./server/growatt_server"]
+STOPSIGNAL SIGTERM
+ENTRYPOINT ["./growatt_server"]
