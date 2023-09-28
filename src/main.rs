@@ -9,6 +9,7 @@ use tokio::net::{TcpListener, TcpStream};
 use futures::FutureExt;
 use serde::{Deserialize, Serialize};
 use tokio::{fs, signal};
+use tokio::signal::unix::{SignalKind};
 use tokio::task::{JoinHandle};
 use tokio_util::sync::CancellationToken;
 use types::MessageType;
@@ -61,13 +62,18 @@ async fn main() -> Result<(), Box<dyn Error>> {
         };
     });
 
-    if let Err(err) = signal::ctrl_c().await {
-        eprintln!("Unable to listen for shutdown signal: {}", err);
-        return Err(Box::try_from(err).unwrap());
-        // we also shut down in case of error
-    } else {
-        println!("Received shutdown signal. Stopping.");
-    }
+    let ctrl_c = async {
+        signal::ctrl_c().await.unwrap();
+    };
+
+    let sigterm = async {
+        signal::unix::signal(SignalKind::terminate()).unwrap().recv().await;
+    };
+
+    tokio::pin!(ctrl_c, sigterm);
+    futures::future::select(ctrl_c, sigterm).await;
+
+    println!("Received shutdown signal. Stopping.");
 
     Ok(())
 }
