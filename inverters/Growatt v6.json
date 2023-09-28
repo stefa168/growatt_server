@@ -28,369 +28,416 @@
     "offset": 73,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "W"
   },
   {
     "name": "PV1 Voltage",
     "offset": 77,
     "length": 2,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "V"
   },
   {
     "name": "PV1 Current",
     "offset": 79,
     "length": 2,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "A"
   },
   {
     "name": "PV1 Power",
     "offset": 81,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "W"
   },
   {
     "name": "PV2 Voltage",
     "offset": 85,
     "length": 2,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "V"
   },
   {
     "name": "PV2 Current",
     "offset": 87,
     "length": 2,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "A"
   },
   {
     "name": "PV2 Power",
     "offset": 89,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "W"
   },
   {
     "name": "PV3 Voltage",
     "offset": 93,
     "length": 2,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "V"
   },
   {
     "name": "PV3 Current",
     "offset": 95,
     "length": 2,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "A"
   },
   {
     "name": "PV3 Power",
     "offset": 97,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "W"
   },
   {
     "name": "PV4 Voltage",
     "offset": 101,
     "length": 2,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "V"
   },
   {
     "name": "PV4 Current",
     "offset": 103,
     "length": 2,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "A"
   },
   {
     "name": "PV4 Power",
     "offset": 105,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "W"
   },
   {
     "name": "PV5 Voltage",
     "offset": 109,
     "length": 2,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "V"
   },
   {
     "name": "PV5 Current",
     "offset": 111,
     "length": 2,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "A"
   },
   {
     "name": "PV5 Power",
     "offset": 113,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "W"
   },
   {
     "name": "Inverter Power Output",
     "offset": 141,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "W"
   },
   {
     "name": "PV Frequency",
     "offset": 145,
     "length": 2,
     "type": "float",
-    "fraction": 100
+    "fraction": 100,
+    "unit": "Hz"
   },
   {
     "name": "P1 Grid Voltage",
     "offset": 147,
     "length": 2,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "V"
   },
   {
     "name": "P1 Grid Current",
     "offset": 149,
     "length": 2,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "A"
   },
   {
     "name": "P1 Grid Power",
     "offset": 151,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "W"
   },
   {
     "name": "P2 Grid Voltage",
     "offset": 155,
     "length": 2,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "V"
   },
   {
     "name": "P2 Grid Current",
     "offset": 157,
     "length": 2,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "A"
   },
   {
     "name": "P2 Grid Power",
     "offset": 159,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "W"
   },
   {
     "name": "P3 Grid Voltage",
     "offset": 163,
     "length": 2,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "V"
   },
   {
     "name": "P3 Grid Current",
     "offset": 165,
     "length": 2,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "A"
   },
   {
     "name": "P3 Grid Power",
     "offset": 167,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "W"
   },
   {
     "name": "Total Online Time",
     "offset": 135,
     "length": 4,
     "type": "float",
-    "fraction": 1
+    "fraction": 1,
+    "unit": "s"
   },
   {
     "name": "eactoday",
     "offset": 177,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "kWh"
   },
   {
     "name": "pvenergytoday",
     "offset": 177,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "kWh"
   },
   {
     "name": "eactotal",
     "offset": 181,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "kWh"
   },
   {
     "name": "epvtotal",
     "offset": 253,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "kWh"
   },
   {
     "name": "epv1today",
     "offset": 189,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "kWh"
   },
   {
     "name": "epv1total",
     "offset": 193,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "kWh"
   },
   {
     "name": "epv2today",
     "offset": 201,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "kWh"
   },
   {
     "name": "epv2total",
     "offset": 205,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "kWh"
   },
   {
     "name": "epv3today",
     "offset": 209,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "kWh"
   },
   {
     "name": "epv3total",
     "offset": 213,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "kWh"
   },
   {
     "name": "epv4today",
     "offset": 217,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "kWh"
   },
   {
     "name": "epv4total",
     "offset": 221,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "kWh"
   },
   {
     "name": "epv5today",
     "offset": 225,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "kWh"
   },
   {
     "name": "epv5total",
     "offset": 229,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "kWh"
   },
   {
     "name": "pvtemperature",
     "offset": 257,
     "length": 2,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "°C"
   },
   {
     "name": "pvipmtemperature",
     "offset": 259,
     "length": 2,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "°C"
   },
   {
     "name": "pvboosttemp",
     "offset": 261,
     "length": 2,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "°C"
   },
   {
     "name": "bat_dsp",
     "offset": 265,
     "length": 2,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit_missing": true
   },
   {
     "name": "pbusvolt",
     "offset": 267,
     "length": 2,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "V"
   },
   {
     "name": "#nbusvolt",
     "offset": 269,
     "length": 2,
     "type": "float",
-    "fraction": 10,
-    "incl": "no"
+    "fraction": 10
+    
   },
   {
     "name": "#ipf",
     "offset": 271,
     "length": 2,
     "type": "float",
-    "fraction": 10,
-    "incl": "no"
+    "fraction": 10
+    
   },
   {
     "name": "#realoppercent",
     "offset": 273,
     "length": 2,
     "type": "float",
-    "fraction": 100,
-    "incl": "no"
+    "fraction": 100
+    
   },
   {
     "name": "#opfullwatt",
     "offset": 275,
     "length": 4,
     "type": "float",
-    "fraction": 10,
-    "incl": "no"
+    "fraction": 10
+    
   },
   {
     "name": "#deratingmode",
     "offset": 279,
     "length": 2,
     "type": "float",
-    "fraction": 1,
-    "incl": "no"
+    "fraction": 1
+    
   },
   {
     "name": "eacharge_today",
@@ -495,14 +542,16 @@
     "offset": 351,
     "length": 2,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "V"
   },
   {
     "name": "SOC",
     "offset": 353,
     "length": 2,
     "type": "float",
-    "fraction": 100
+    "fraction": 1,
+    "unit": "%"
   },
   {
     "name": "pactouserr",
@@ -516,16 +565,16 @@
     "offset": 359,
     "length": 4,
     "type": "float",
-    "fraction": 10,
-    "incl": "no"
+    "fraction": 10
+    
   },
   {
     "name": "#pactousert",
     "offset": 363,
     "length": 4,
     "type": "float",
-    "fraction": 10,
-    "incl": "no"
+    "fraction": 10
+    
   },
   {
     "name": "pactousertot",
@@ -546,16 +595,16 @@
     "offset": 375,
     "length": 4,
     "type": "float",
-    "fraction": 10,
-    "incl": "no"
+    "fraction": 10
+    
   },
   {
     "name": "#pactogridt",
     "offset": 379,
     "length": 4,
     "type": "float",
-    "fraction": 10,
-    "incl": "no"
+    "fraction": 10
+    
   },
   {
     "name": "pactogridtot",
@@ -576,16 +625,16 @@
     "offset": 391,
     "length": 4,
     "type": "float",
-    "fraction": 10,
-    "incl": "no"
+    "fraction": 10
+    
   },
   {
     "name": "#plocaloadt",
     "offset": 395,
     "length": 4,
     "type": "float",
-    "fraction": 10,
-    "incl": "no"
+    "fraction": 10
+    
   },
   {
     "name": "plocaloadtot",
@@ -599,8 +648,8 @@
     "offset": 403,
     "length": 2,
     "type": "float",
-    "fraction": 10,
-    "incl": "no"
+    "fraction": 10
+    
   },
   {
     "name": "#battemp",
@@ -608,7 +657,8 @@
     "length": 2,
     "type": "float",
     "fraction": 10,
-    "incl": "no"
+    "unit": "°C"
+    
   },
   {
     "name": "spdspstatus",
@@ -622,7 +672,8 @@
     "offset": 409,
     "length": 2,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "V"
   },
   {
     "name": "etouser_tod",
@@ -657,41 +708,47 @@
     "offset": 429,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "kWh"
   },
   {
     "name": "edischarge1_tot",
     "offset": 433,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "kWh"
   },
   {
     "name": "eharge1_tod",
     "offset": 437,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "kWh"
   },
   {
     "name": "eharge1_tot",
     "offset": 441,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "kWh"
   },
   {
     "name": "elocalload_tod",
     "offset": 445,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "kWh"
   },
   {
     "name": "elocalload_tot",
     "offset": 449,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "unit": "kWh"
   }
 ]
