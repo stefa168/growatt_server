@@ -12,6 +12,7 @@ Readme template from https://github.com/othneildrew/Best-README-Template
 [//]: # ([![Stargazers][stars-shield]][stars-url])
 [![GPL3 License][license-shield]][license-url]
 [![Issues][issues-shield]][issues-url]
+![build-shield]
 
 <div align="center">
 <!-- 
@@ -166,7 +167,8 @@ Project Link: [https://github.com/stefa168/growatt_server](https://github.com/st
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[issues-shield]: https://img.shields.io/github/issues/stefa168/growatt_server.svg
+[issues-shield]: https://img.shields.io/github/issues/stefa168/growatt_server.svg?logo=github
 [issues-url]: https://github.com/stefa168/growatt_server/issues
 [license-shield]: https://www.gnu.org/graphics/gplv3-or-later-sm.png
 [license-url]: https://github.com/stefa168/growatt_server/blob/master/LICENSE.md
+[build-shield]: https://img.shields.io/github/actions/workflow/status/stefa168/growatt_server/rust.yml?logo=rust
