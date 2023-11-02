@@ -1,20 +1,21 @@
 use std::error::Error;
 use std::{f32, io};
-use std::io::{BufRead};
+use std::io::BufRead;
 use std::net::SocketAddr;
 use std::ops::Deref;
-use std::sync::{Arc};
+use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 use futures::FutureExt;
 use serde::{Deserialize, Serialize};
 use tokio::{fs, signal};
-use tokio::signal::unix::{SignalKind};
-use tokio::task::{JoinHandle};
+use tokio::signal::unix::SignalKind;
+use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 use types::MessageType;
 
 mod types;
+mod utils;
 
 const BUF_SIZE: usize = 65535;
 
@@ -123,7 +124,7 @@ impl ConnectionHandler {
     }
 
     fn handle_data<'a>(&self, data: &'a [u8]) -> &'a [u8] {
-        let bytes = unscramble_data(data);
+        let bytes = utils::unscramble_data(data);
 
         println!("New message! {}", bytes.iter().map(|b| format!("{:02x}", b)).collect::<String>());
 
@@ -154,7 +155,7 @@ impl ConnectionHandler {
                     Datatype::String => {
                         println!("{}: {}",
                                  fragment.name,
-                                 hex_bytes_to_ascii(&slice)
+                                 utils::hex_bytes_to_ascii(&slice)
                                      .chars()
                                      .filter(|c| c.is_alphanumeric()).collect::<String>()
                         );
@@ -266,42 +267,4 @@ impl ConnectionHandler {
 
         Ok(())
     }
-}
-
-fn unscramble_data(data: &[u8]) -> Vec<u8> {
-    let ndecdata = data.len();
-    let mask = b"Growatt";
-
-    // Start the decrypt routine
-    let mut unscrambled: Vec<u8> = data[..8].to_vec(); // Isolate the unscrambled header
-
-    for (i, j) in (8..ndecdata).zip((0..mask.len()).cycle()) {
-        let dec_byte = data[i] ^ mask[j];
-        unscrambled.push(dec_byte);
-    }
-
-    unscrambled
-}
-
-fn hex_bytes_to_ascii(hex_bytes: &[u8]) -> String {
-    hex_bytes.iter().map(|b| b.clone() as char).collect()
-}
-
-fn print_bytes(bytes: &[u8], n: usize) {
-    bytes.chunks(n).enumerate().for_each(|(i, chunk)| {
-        if i != 0 {
-            println!();
-        }
-        print!("{:04x}: ", i * n);
-        chunk.iter().enumerate().for_each(|(j, byte)| {
-            if j != 0 && j % (n / 2) == 0 {
-                print!(" ");
-            }
-            print!("{:02x} ", byte);
-        });
-        print!("  ");
-        chunk.iter().for_each(|byte| {
-            print!("{}", *byte as char);
-        });
-    });
 }
