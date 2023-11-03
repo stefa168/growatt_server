@@ -1,8 +1,6 @@
 use std::error::Error;
 use std::io;
-use std::io::BufRead;
 use std::net::SocketAddr;
-use std::ops::Deref;
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};

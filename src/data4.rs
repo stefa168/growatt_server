@@ -18,21 +18,21 @@ impl Data4Message {
         let bytes = &bytes[8..];
         let mut data = HashMap::new();
 
-        for &fragment in inverter_fragments.iter() {
+        for fragment in inverter_fragments.iter() {
             let base_offset = fragment.offset as usize;
             let end_offset = base_offset + fragment.bytes_len as usize;
 
             let slice = &bytes[base_offset..end_offset];
 
             let string_value = match &fragment.fragment_type {
-                String => {
+                Datatype::String => {
                     utils::hex_bytes_to_ascii(&slice)
                         .chars()
                         .filter(|c| c.is_alphanumeric()).collect::<String>()
                 }
                 Datatype::Date => {
                     println!("{}/{}/{} {}:{}:{}", slice[0], slice[1], slice[2], slice[3], slice[4], slice[5]);
-                    let year = 2000 + slice[0].into();
+                    let year = 2000 + <i32>::from(slice[0]);
                     let month = slice[1].into();
                     let day = slice[2].into();
                     let hour = slice[3].into();
