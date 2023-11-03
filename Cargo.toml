@@ -15,10 +15,12 @@ path = "src/main.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-serde = { version = "1.0.188", features = ["derive", "std", "rc"] }
-serde_yaml = "0.9.25"
-serde_json = "1.0.107"
-tokio = { version = "1.32.0", features = ["full"] }
-tokio-util = "0.7.8"
-futures = "0.3.28"
+serde = { version = "1.0.190", features = ["derive", "std", "rc"] }
+serde_yaml = "0.9.27"
+serde_json = "1.0.108"
+tokio = { version = "1.33.0", features = ["full"] }
+tokio-util = "0.7.10"
+futures = "0.3.29"
 bytes = "1.5.0"
+chrono = "0.4.31"
+sea-orm = { version = "0.12.4" , features = ["sqlx-postgres"]}

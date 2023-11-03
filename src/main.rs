@@ -1,5 +1,5 @@
 use std::error::Error;
-use std::{f32, io};
+use std::io;
 use std::io::BufRead;
 use std::net::SocketAddr;
 use std::ops::Deref;
@@ -12,10 +12,12 @@ use tokio::{fs, signal};
 use tokio::signal::unix::SignalKind;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
+use data4::Data4Message;
 use types::MessageType;
 
 mod types;
 mod utils;
+mod data4;
 
 const BUF_SIZE: usize = 65535;
 
@@ -84,6 +86,39 @@ struct ConnectionHandler {
 }
 
 impl ConnectionHandler {
+    fn handle_data<'a>(&self, data: &'a [u8]) -> &'a [u8] {
+        let bytes = utils::unscramble_data(data);
+
+        println!("New message! {}", bytes.iter().map(|b| format!("{:02x}", b)).collect::<String>());
+
+        let data_length = u16::from_be_bytes(bytes[4..6].try_into().unwrap());
+
+        println!("Data length: {data_length} bytes");
+
+        let message_type = match bytes[7] {
+            0x03 => MessageType::DATA3,
+            0x04 => MessageType::DATA4,
+            0x16 => MessageType::PING,
+            0x18 => MessageType::CONFIGURE,
+            0x19 => MessageType::IDENTIFY,
+            v => MessageType::UNKNOWN(v),
+        };
+        println!("Message type: {:?}", message_type);
+
+        if matches!(message_type, MessageType::DATA4) {
+            let opt = Data4Message::new(self.inverter.clone(), &bytes);
+
+            if let Ok(r) = opt {
+                println!("{:?}", r);
+            } else {
+                let e = opt.unwrap_err();
+                println!("{}", e);
+            }
+        }
+
+        data
+    }
+
     async fn copy_with_abort<R, W>(
         &self,
         read: &mut R,
@@ -121,87 +156,6 @@ impl ConnectionHandler {
         }
 
         Ok(bytes_forwarded)
-    }
-
-    fn handle_data<'a>(&self, data: &'a [u8]) -> &'a [u8] {
-        let bytes = utils::unscramble_data(data);
-
-        println!("New message! {}", bytes.iter().map(|b| format!("{:02x}", b)).collect::<String>());
-
-        let data_length = u16::from_be_bytes(bytes[4..6].try_into().unwrap());
-
-        println!("Data length: {data_length} bytes");
-
-        let message_type = match bytes[7] {
-            0x03 => MessageType::DATA3,
-            0x04 => MessageType::DATA4,
-            0x16 => MessageType::PING,
-            0x18 => MessageType::CONFIGURE,
-            0x19 => MessageType::IDENTIFY,
-            v => MessageType::UNKNOWN(v),
-        };
-        println!("Message type: {:?}", message_type);
-
-        if matches!(message_type, MessageType::DATA4) {
-            let bytes = &bytes[8..];
-
-            for fragment in self.inverter.iter() {
-                let base_offset = fragment.offset as usize;
-                let end_offset = (base_offset + fragment.bytes_len as usize) as usize;
-
-                let slice = &bytes[base_offset..end_offset];
-
-                match fragment.fragment_type {
-                    Datatype::String => {
-                        println!("{}: {}",
-                                 fragment.name,
-                                 utils::hex_bytes_to_ascii(&slice)
-                                     .chars()
-                                     .filter(|c| c.is_alphanumeric()).collect::<String>()
-                        );
-                    }
-                    Datatype::Date => {
-                        if slice.len() < 6 {
-                            eprintln!("Not enough values for date! {}/6", slice.len());
-                            continue;
-                        }
-                        println!("{}/{}/{} {}:{}:{}", slice[0], slice[1], slice[2], slice[3], slice[4], slice[5]);
-                    }
-                    Datatype::Integer/* | Datatype::Float*/ => {
-                        let mut four_bytes = Vec::from(slice);
-
-                        for _ in 0..(4 - four_bytes.len()) {
-                            four_bytes.insert(0, 0);
-                        }
-
-                        let four_bytes: [u8; 4] = four_bytes.try_into().or_else(|e| {
-                            eprintln!("Error converting slice to array: {:?}", e);
-                            return Err(e);
-                        }).unwrap();
-
-                        println!("{}: {}", fragment.name, u32::from_be_bytes(four_bytes));
-                    }
-                    Datatype::Float => {
-                        let mut four_bytes = Vec::from(slice);
-
-                        for _ in 0..(4 - four_bytes.len()) {
-                            four_bytes.insert(0, 0);
-                        }
-
-                        let four_bytes: [u8; 4] = four_bytes.try_into().or_else(|e| {
-                            eprintln!("Error converting slice to array: {:?}", e);
-                            return Err(e);
-                        }).unwrap();
-
-                        let value = u32::from_be_bytes(four_bytes);
-
-                        println!("{}: {}", fragment.name, (value as f32) / (fragment.fraction.unwrap_or(1) as f32));
-                    }
-                }
-            }
-        }
-
-        data
     }
 
     pub async fn handle_connection(&self, mut client_stream: TcpStream, client_addr: SocketAddr) -> Result<(), Box<dyn Error>> {
