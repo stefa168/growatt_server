@@ -22,3 +22,5 @@ jobs:
         SQLX_OFFLINE: true
     - name: Run tests
       run: cargo test --verbose
+      env:
+        SQLX_OFFLINE: true
