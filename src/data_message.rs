@@ -17,9 +17,9 @@ pub struct DataMessage {
 impl DataMessage {
     pub fn data4(
         inverter_fragments: Arc<Vec<GrowattV6EnergyFragment>>,
-        bytes: &Vec<u8>,
+        bytes: &[u8],
     ) -> Result<Self, String> {
-        let bytes = bytes.clone();
+        let bytes = bytes.to_owned();
 
         let header: Vec<u8> = bytes[0..=7].to_vec();
 
@@ -35,7 +35,7 @@ impl DataMessage {
             let slice = &bytes[base_offset..end_offset];
 
             let string_value = match &fragment.fragment_type {
-                Datatype::String => utils::hex_bytes_to_ascii(&slice)
+                Datatype::String => utils::hex_bytes_to_ascii(slice)
                     .chars()
                     .filter(|c| c.is_alphanumeric())
                     .collect::<String>(),
@@ -66,9 +66,9 @@ impl DataMessage {
 
                     let four_bytes: [u8; 4] = four_bytes
                         .try_into()
-                        .or_else(|e| {
+                        .map_err(|e| {
                             eprintln!("Error converting slice to array: {:?}", e);
-                            return Err(e);
+                            e
                         })
                         .unwrap();
 
@@ -85,9 +85,9 @@ impl DataMessage {
 
                     let four_bytes: [u8; 4] = four_bytes
                         .try_into()
-                        .or_else(|e| {
+                        .map_err(|e| {
                             eprintln!("Error converting slice to array: {:?}", e);
-                            return Err(e);
+                            e
                         })
                         .unwrap();
 
@@ -103,14 +103,14 @@ impl DataMessage {
         Ok(Self {
             raw: bytes.into(),
             header,
-            data_type: MessageType::DATA4,
+            data_type: MessageType::Data4,
             data,
             time,
         })
     }
 
-    pub fn placeholder(bytes: &Vec<u8>, message_type: MessageType) -> Result<Self, String> {
-        let bytes = bytes.clone();
+    pub fn placeholder(bytes: &[u8], message_type: MessageType) -> Result<Self, String> {
+        let bytes = bytes.to_owned();
         let header: Vec<u8> = bytes[0..=7].to_vec();
 
         let time = Local::now();

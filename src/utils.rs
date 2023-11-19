@@ -14,7 +14,7 @@ pub fn unscramble_data(data: &[u8]) -> Vec<u8> {
 }
 
 pub fn hex_bytes_to_ascii(hex_bytes: &[u8]) -> String {
-    hex_bytes.iter().map(|b| b.clone() as char).collect()
+    hex_bytes.iter().map(|b| *b as char).collect()
 }
 
 #[allow(dead_code)]

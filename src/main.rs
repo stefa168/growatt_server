@@ -5,6 +5,7 @@ use sqlx::postgres::PgConnectOptions;
 use sqlx::PgPool;
 use std::error::Error;
 use std::io;
+use std::fmt::Write;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -112,10 +113,17 @@ impl ConnectionHandler {
 
         println!(
             "New message! {}",
-            bytes
+            /*bytes
                 .iter()
                 .map(|b| format!("{:02x}", b))
-                .collect::<String>()
+                .collect::<String>()*/
+
+            bytes
+                .iter()
+                .fold(String::new(), |mut output, b|{
+                    write!(output, "{:02x}", b).unwrap();
+                    output
+                })
         );
 
         let data_length = u16::from_be_bytes(bytes[4..6].try_into().unwrap());
@@ -123,12 +131,12 @@ impl ConnectionHandler {
         println!("Data length: {data_length} bytes");
 
         let message = match bytes[7] {
-            0x03 => DataMessage::placeholder(&bytes, MessageType::DATA3),
+            0x03 => DataMessage::placeholder(&bytes, MessageType::Data3),
             0x04 => DataMessage::data4(self.inverter.clone(), &bytes),
-            0x16 => DataMessage::placeholder(&bytes, MessageType::PING),
-            0x18 => DataMessage::placeholder(&bytes, MessageType::CONFIGURE),
-            0x19 => DataMessage::placeholder(&bytes, MessageType::IDENTIFY),
-            _ => DataMessage::placeholder(&bytes, MessageType::UNKNOWN),
+            0x16 => DataMessage::placeholder(&bytes, MessageType::Ping),
+            0x18 => DataMessage::placeholder(&bytes, MessageType::Configure),
+            0x19 => DataMessage::placeholder(&bytes, MessageType::Identify),
+            _ => DataMessage::placeholder(&bytes, MessageType::Unknown),
         };
 
         let datamessage = message.unwrap();
@@ -232,10 +240,10 @@ impl ConnectionHandler {
         // signal::ctrl_c().await?;
         let (remote_copied, client_copied) = tokio::join! {
             self.copy_with_abort(&mut remote_read, &mut client_write, cancellation_token.clone(), false).then(|r| {
-                let _ = c3.cancel(); async {r}
+                c3.cancel(); async {r}
             }),
             self.copy_with_abort(&mut client_read, &mut remote_write, cancellation_token.clone(), true).then(|r| {
-                let _ = c3.cancel(); async {r}
+                c3.cancel(); async {r}
             })
         };
 
