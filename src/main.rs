@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 use sqlx::postgres::PgConnectOptions;
 use sqlx::PgPool;
 use std::error::Error;
-use std::io;
 use std::fmt::Write;
+use std::io;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -113,17 +113,10 @@ impl ConnectionHandler {
 
         println!(
             "New message! {}",
-            /*bytes
-                .iter()
-                .map(|b| format!("{:02x}", b))
-                .collect::<String>()*/
-
-            bytes
-                .iter()
-                .fold(String::new(), |mut output, b|{
-                    write!(output, "{:02x}", b).unwrap();
-                    output
-                })
+            bytes.iter().fold(String::new(), |mut output, b| {
+                write!(output, "{:02x}", b).unwrap();
+                output
+            })
         );
 
         let data_length = u16::from_be_bytes(bytes[4..6].try_into().unwrap());
