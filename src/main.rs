@@ -1,23 +1,23 @@
+use data_message::DataMessage;
+use futures::FutureExt;
+use serde::{Deserialize, Serialize};
+use sqlx::postgres::PgConnectOptions;
+use sqlx::PgPool;
 use std::error::Error;
 use std::io;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
-use futures::FutureExt;
-use serde::{Deserialize, Serialize};
-use sqlx::{PgPool};
-use sqlx::postgres::PgConnectOptions;
-use tokio::{fs, signal};
 use tokio::signal::unix::SignalKind;
 use tokio::task::JoinHandle;
+use tokio::{fs, signal};
 use tokio_util::sync::CancellationToken;
-use data_message::DataMessage;
 use types::MessageType;
 
+mod data_message;
 mod types;
 mod utils;
-mod data_message;
 
 const BUF_SIZE: usize = 65535;
 
@@ -68,12 +68,18 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let pool = db_pool.clone();
 
             tokio::spawn(async move {
-                let handler = ConnectionHandler { inverter: i, db_pool: pool };
+                let handler = ConnectionHandler {
+                    inverter: i,
+                    db_pool: pool,
+                };
                 if let Err(e) = handler.handle_connection(client, client_addr).await {
-                    eprintln!("An error occurred while handling a connection from {}: {}", client_addr, e);
+                    eprintln!(
+                        "An error occurred while handling a connection from {}: {}",
+                        client_addr, e
+                    );
                 }
             });
-        };
+        }
     });
 
     let ctrl_c = async {
@@ -81,7 +87,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
     };
 
     let sigterm = async {
-        signal::unix::signal(SignalKind::terminate()).unwrap().recv().await;
+        signal::unix::signal(SignalKind::terminate())
+            .unwrap()
+            .recv()
+            .await;
     };
 
     tokio::pin!(ctrl_c, sigterm);
@@ -101,7 +110,13 @@ impl ConnectionHandler {
     async fn handle_data<'a>(&self, data: &'a [u8]) -> &'a [u8] {
         let bytes = utils::unscramble_data(data);
 
-        println!("New message! {}", bytes.iter().map(|b| format!("{:02x}", b)).collect::<String>());
+        println!(
+            "New message! {}",
+            bytes
+                .iter()
+                .map(|b| format!("{:02x}", b))
+                .collect::<String>()
+        );
 
         let data_length = u16::from_be_bytes(bytes[4..6].try_into().unwrap());
 
@@ -134,10 +149,15 @@ impl ConnectionHandler {
         let id = r.unwrap().id;
 
         for (key, value) in datamessage.data {
-            sqlx::query!("INSERT INTO message_data (message_id, key, value) VALUES ($1, $2, $3)",
-            id, key, value)
-                .execute(&self.db_pool)
-                .await.unwrap();
+            sqlx::query!(
+                "INSERT INTO message_data (message_id, key, value) VALUES ($1, $2, $3)",
+                id,
+                key,
+                value
+            )
+            .execute(&self.db_pool)
+            .await
+            .unwrap();
         }
 
         data
@@ -148,8 +168,12 @@ impl ConnectionHandler {
         read: &mut R,
         write: &mut W,
         abort: CancellationToken,
-        handle_data: bool) -> tokio::io::Result<usize>
-        where R: tokio::io::AsyncRead + Unpin, W: tokio::io::AsyncWrite + Unpin {
+        handle_data: bool,
+    ) -> tokio::io::Result<usize>
+    where
+        R: tokio::io::AsyncRead + Unpin,
+        W: tokio::io::AsyncWrite + Unpin,
+    {
         let mut bytes_forwarded = 0;
         let mut buf = [0u8; BUF_SIZE];
 
@@ -182,7 +206,11 @@ impl ConnectionHandler {
         Ok(bytes_forwarded)
     }
 
-    pub async fn handle_connection(&self, mut client_stream: TcpStream, client_addr: SocketAddr) -> Result<(), Box<dyn Error>> {
+    pub async fn handle_connection(
+        &self,
+        mut client_stream: TcpStream,
+        client_addr: SocketAddr,
+    ) -> Result<(), Box<dyn Error>> {
         println!("New connection from {}", client_addr);
 
         let mut remote_server = match TcpStream::connect("server.growatt.com:5279").await {
@@ -203,13 +231,13 @@ impl ConnectionHandler {
         // add a wrapping tokio::select! to the tokio join in order to wait for ctrl_c
         // signal::ctrl_c().await?;
         let (remote_copied, client_copied) = tokio::join! {
-                self.copy_with_abort(&mut remote_read, &mut client_write, cancellation_token.clone(), false).then(|r| {
-                    let _ = c3.cancel(); async {r}
-                }),
-                self.copy_with_abort(&mut client_read, &mut remote_write, cancellation_token.clone(), true).then(|r| {
-                    let _ = c3.cancel(); async {r}
-                })
-            };
+            self.copy_with_abort(&mut remote_read, &mut client_write, cancellation_token.clone(), false).then(|r| {
+                let _ = c3.cancel(); async {r}
+            }),
+            self.copy_with_abort(&mut client_read, &mut remote_write, cancellation_token.clone(), true).then(|r| {
+                let _ = c3.cancel(); async {r}
+            })
+        };
 
         match client_copied {
             Ok(count) => {
