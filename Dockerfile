@@ -1,6 +1,7 @@
 FROM rust:slim-bookworm as builder
 WORKDIR /usr/src/growatt_server/
 COPY . .
+ENV SQLX_OFFLINE=true
 RUN cargo install --path .
 
 FROM debian:bookworm-slim
