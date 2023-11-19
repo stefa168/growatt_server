@@ -6,16 +6,18 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 use futures::FutureExt;
 use serde::{Deserialize, Serialize};
+use sqlx::{PgPool};
+use sqlx::postgres::PgConnectOptions;
 use tokio::{fs, signal};
 use tokio::signal::unix::SignalKind;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
-use data4::Data4Message;
+use data_message::DataMessage;
 use types::MessageType;
 
 mod types;
 mod utils;
-mod data4;
+mod data_message;
 
 const BUF_SIZE: usize = 65535;
 
@@ -42,6 +44,15 @@ pub struct GrowattV6EnergyFragment {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    let db_opts = PgConnectOptions::new()
+        .username("postgres")
+        .password("password")
+        .host("localhost")
+        .port(5433)
+        .database("postgres");
+
+    let db_pool = PgPool::connect_with(db_opts).await?;
+
     let json = fs::read_to_string("./inverters/Growatt v6.json").await?;
     let inverter: Arc<Vec<GrowattV6EnergyFragment>> = Arc::new(serde_json::from_str(&json)?);
 
@@ -54,8 +65,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let (client, client_addr) = listener.accept().await?;
 
             let i = inverter.clone();
+            let pool = db_pool.clone();
+
             tokio::spawn(async move {
-                let handler = ConnectionHandler { inverter: i };
+                let handler = ConnectionHandler { inverter: i, db_pool: pool };
                 if let Err(e) = handler.handle_connection(client, client_addr).await {
                     eprintln!("An error occurred while handling a connection from {}: {}", client_addr, e);
                 }
@@ -81,10 +94,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 struct ConnectionHandler {
     inverter: Arc<Vec<GrowattV6EnergyFragment>>,
+    db_pool: sqlx::Pool<sqlx::Postgres>,
 }
 
 impl ConnectionHandler {
-    fn handle_data<'a>(&self, data: &'a [u8]) -> &'a [u8] {
+    async fn handle_data<'a>(&self, data: &'a [u8]) -> &'a [u8] {
         let bytes = utils::unscramble_data(data);
 
         println!("New message! {}", bytes.iter().map(|b| format!("{:02x}", b)).collect::<String>());
@@ -93,25 +107,37 @@ impl ConnectionHandler {
 
         println!("Data length: {data_length} bytes");
 
-        let message_type = match bytes[7] {
-            0x03 => MessageType::DATA3,
-            0x04 => MessageType::DATA4,
-            0x16 => MessageType::PING,
-            0x18 => MessageType::CONFIGURE,
-            0x19 => MessageType::IDENTIFY,
-            v => MessageType::UNKNOWN(v),
+        let message = match bytes[7] {
+            0x03 => DataMessage::placeholder(&bytes, MessageType::DATA3),
+            0x04 => DataMessage::data4(self.inverter.clone(), &bytes),
+            0x16 => DataMessage::placeholder(&bytes, MessageType::PING),
+            0x18 => DataMessage::placeholder(&bytes, MessageType::CONFIGURE),
+            0x19 => DataMessage::placeholder(&bytes, MessageType::IDENTIFY),
+            _ => DataMessage::placeholder(&bytes, MessageType::UNKNOWN),
         };
-        println!("Message type: {:?}", message_type);
 
-        if matches!(message_type, MessageType::DATA4) {
-            let opt = Data4Message::new(self.inverter.clone(), &bytes);
+        let datamessage = message.unwrap();
 
-            if let Ok(r) = opt {
-                println!("{:?}", r);
-            } else {
-                let e = opt.unwrap_err();
-                println!("{}", e);
-            }
+        println!("Message type: {:?}", &datamessage.data_type);
+
+        let r = sqlx::query!("INSERT INTO inverter_messages (raw, type, header, time) VALUES ($1, $2, $3, $4) returning id",
+            datamessage.raw, serde_json::to_string(&datamessage.data_type).unwrap(), datamessage.header, datamessage.time)
+            .fetch_one(&self.db_pool)
+            // todo handle unlikely scenarios
+            .await;
+
+        if let Err(e) = r {
+            println!("{}", e);
+            return data;
+        }
+
+        let id = r.unwrap().id;
+
+        for (key, value) in datamessage.data {
+            sqlx::query!("INSERT INTO message_data (message_id, key, value) VALUES ($1, $2, $3)",
+            id, key, value)
+                .execute(&self.db_pool)
+                .await.unwrap();
         }
 
         data
@@ -146,7 +172,7 @@ impl ConnectionHandler {
 
             let bytes_to_forward = match handle_data {
                 false => &buf[..bytes_read],
-                true => self.handle_data(&buf[..bytes_read]),
+                true => self.handle_data(&buf[..bytes_read]).await,
             };
 
             write.write_all(bytes_to_forward).await?;

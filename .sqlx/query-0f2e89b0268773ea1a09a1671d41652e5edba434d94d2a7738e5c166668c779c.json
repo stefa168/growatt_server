@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO inverter_messages (raw, type, header, time) VALUES ($1, $2, $3, $4) returning id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bytea",
+        "Text",
+        "Bytea",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "0f2e89b0268773ea1a09a1671d41652e5edba434d94d2a7738e5c166668c779c"
+}

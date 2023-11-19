@@ -8,7 +8,7 @@ services:
     volumes:
       - ./inverters:/usr/local/bin/inverters
   timescale:
-    container_name: postgres
+    container_name: timescale
     image: timescale/timescaledb-ha:pg15.3-ts2.11.0-all
     restart: unless-stopped
     # https://github.com/timescale/timescaledb-docker-ha/issues/359
@@ -18,7 +18,7 @@ services:
       POSTGRES_PASSWORD_FILE: "/run/secrets/postgres-password"
       PGDATA: "/var/lib/postgresql/data"
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - ./timescale-data:/var/lib/postgresql/data
     secrets:

@@ -1,22 +1,29 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::f32;
+use chrono::{DateTime, Local};
 use crate::{Datatype, GrowattV6EnergyFragment, utils};
+use crate::types::MessageType;
 
 #[derive(Debug)]
-pub struct Data4Message {
-    header: Vec<u8>,
-    data: HashMap<String, String>,
+pub struct DataMessage {
+    pub raw: Vec<u8>,
+    pub header: Vec<u8>,
+    pub data_type: MessageType,
+    pub data: HashMap<String, String>,
+    pub time: DateTime<Local>,
 }
 
-impl Data4Message {
-    pub fn new(inverter_fragments: Arc<Vec<GrowattV6EnergyFragment>>, bytes: &Vec<u8>) -> Result<Self, String> {
+impl DataMessage {
+    pub fn data4(inverter_fragments: Arc<Vec<GrowattV6EnergyFragment>>, bytes: &Vec<u8>) -> Result<Self, String> {
         let bytes = bytes.clone();
 
         let header: Vec<u8> = bytes[0..=7].to_vec();
 
         let bytes = &bytes[8..];
         let mut data = HashMap::new();
+
+        let time = Local::now();
 
         for fragment in inverter_fragments.iter() {
             let base_offset = fragment.offset as usize;
@@ -79,6 +86,15 @@ impl Data4Message {
             data.insert(fragment.name.clone(), string_value);
         }
 
-        Ok(Self { header, data })
+        Ok(Self { raw: bytes.into(), header, data_type: MessageType::DATA4, data, time })
+    }
+
+    pub fn placeholder(bytes: &Vec<u8>, message_type: MessageType) -> Result<Self, String> {
+        let bytes = bytes.clone();
+        let header: Vec<u8> = bytes[0..=7].to_vec();
+
+        let time = Local::now();
+
+        Ok(Self { raw: bytes, header, data_type: message_type, data: Default::default(), time })
     }
 }
