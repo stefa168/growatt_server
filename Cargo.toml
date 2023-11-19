@@ -1,6 +1,6 @@
 [package]
 name = "growatt_server"
-version = "0.1.2"
+version = "0.1.2a"
 edition = "2021"
 authors = ["Stefano Vittorio Porta <stefa168@hotmail.it>"]
 repository = "https://github.com/stefa168/growatt_server"

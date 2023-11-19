@@ -75,6 +75,7 @@ jobs:
           archive: $bin-${{ matrix.target }}
           ref: refs/tags/v${{ needs.get-tag.outputs.pkg-version }}
           token: ${{ secrets.GITHUB_TOKEN }}
+          include: LICENSE.md, README.md, inverters
 
   push-to-registry:
     name: "Push Docker image to Docker Hub"
