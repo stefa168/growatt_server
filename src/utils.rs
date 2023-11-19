@@ -17,6 +17,7 @@ pub fn hex_bytes_to_ascii(hex_bytes: &[u8]) -> String {
     hex_bytes.iter().map(|b| b.clone() as char).collect()
 }
 
+#[allow(dead_code)]
 fn print_bytes(bytes: &[u8], n: usize) {
     bytes.chunks(n).enumerate().for_each(|(i, chunk)| {
         if i != 0 {
