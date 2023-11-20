@@ -52,13 +52,23 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .port(5433)
         .database("postgres");
 
-    let db_pool = PgPool::connect_with(db_opts).await?;
+    let db_pool = match PgPool::connect_with(db_opts).await {
+        Ok(pool) => pool,
+        Err(e) => {
+            return Err(
+                Box::try_from(format!("Failed to connect to the Database.\n{}", e)).unwrap(),
+            );
+        }
+    };
 
     let json = fs::read_to_string("./inverters/Growatt v6.json").await?;
     let inverter: Arc<Vec<GrowattV6EnergyFragment>> = Arc::new(serde_json::from_str(&json)?);
 
     // https://github.com/mqudsi/tcpproxy/blob/master/src/main.rs
-    let listener = TcpListener::bind("0.0.0.0:5279").await?;
+    let listener = match TcpListener::bind("0.0.0.0:5279").await {
+        Ok(l) => l,
+        Err(e) => return Err(Box::try_from(format!("Failed to open port 5279: {}", e)).unwrap()),
+    };
     println!("Listening on {}", listener.local_addr().unwrap());
 
     let _listener_task: JoinHandle<io::Result<()>> = tokio::spawn(async move {
@@ -156,9 +166,9 @@ impl ConnectionHandler {
                 key,
                 value
             )
-            .execute(&self.db_pool)
-            .await
-            .unwrap();
+                .execute(&self.db_pool)
+                .await
+                .unwrap();
         }
 
         data
@@ -171,9 +181,9 @@ impl ConnectionHandler {
         abort: CancellationToken,
         handle_data: bool,
     ) -> tokio::io::Result<usize>
-    where
-        R: tokio::io::AsyncRead + Unpin,
-        W: tokio::io::AsyncWrite + Unpin,
+        where
+            R: tokio::io::AsyncRead + Unpin,
+            W: tokio::io::AsyncWrite + Unpin,
     {
         let mut bytes_forwarded = 0;
         let mut buf = [0u8; BUF_SIZE];
