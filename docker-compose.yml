@@ -1,12 +1,14 @@
 version: "3.9"
 services:
   growatt_server:
-    image: stefa168/growatt_server:latest
+#    image: stefa168/growatt_server:latest
     build: .
     ports:
       - "5279:5279/tcp"
     volumes:
       - ./inverters:/usr/local/bin/inverters
+    networks:
+      postgres-net:
   timescale:
     container_name: timescale
     image: timescale/timescaledb-ha:pg15.3-ts2.11.0-all

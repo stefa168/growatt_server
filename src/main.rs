@@ -48,8 +48,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let db_opts = PgConnectOptions::new()
         .username("postgres")
         .password("password")
-        .host("localhost")
-        .port(5433)
+        .host("timescale")
+        .port(5432)
         .database("postgres");
 
     let db_pool = match PgPool::connect_with(db_opts).await {
