@@ -1,10 +1,10 @@
+use anyhow::{Context, Result};
 use clap::{arg, crate_authors, crate_description, crate_name, crate_version, Command};
 use data_message::DataMessage;
 use futures::FutureExt;
 use serde::{Deserialize, Serialize};
 use sqlx::postgres::PgConnectOptions;
 use sqlx::PgPool;
-use std::error::Error;
 use std::fmt::Write;
 use std::io;
 use std::net::SocketAddr;
@@ -46,36 +46,25 @@ pub struct GrowattV6EnergyFragment {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+async fn main() -> Result<()> {
     let args = get_cli_conf().get_matches();
 
     let config_path: &String = args.get_one("config_path").unwrap();
-    let config = match config::load_from_yaml(config_path).await {
-        Ok(config) => config,
-        Err(e) => {
-            return Err(Box::try_from(format!(
-                "Could not find configuration file in specified path. {}",
-                e
-            ))
-            .unwrap());
-        }
-    };
+
+    let config = config::load_from_yaml(config_path)
+        .await
+        .context("Failed to load the configuration file")?;
 
     let db_opts = PgConnectOptions::new()
-        .username(&config.db.username)
-        .password(&config.db.password)
-        .host(&config.db.host)
-        .port(config.db.port)
-        .database(&config.db.database);
+        .username(&config.database.username)
+        .password(&config.database.password)
+        .host(&config.database.host)
+        .port(config.database.port)
+        .database(&config.database.database);
 
-    let db_pool = match PgPool::connect_with(db_opts).await {
-        Ok(pool) => pool,
-        Err(e) => {
-            return Err(
-                Box::try_from(format!("Failed to connect to the Database. {}", e)).unwrap(),
-            );
-        }
-    };
+    let db_pool = PgPool::connect_with(db_opts)
+        .await
+        .context("Failed to connect to the Database")?;
 
     let json = fs::read_to_string(
         config
@@ -86,20 +75,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let inverter: Arc<Vec<GrowattV6EnergyFragment>> = Arc::new(serde_json::from_str(&json)?);
 
     // https://github.com/mqudsi/tcpproxy/blob/master/src/main.rs
-    let listener = match TcpListener::bind(format!("{}:{:?}", "0.0.0.0", config.listen_port)).await
-    {
-        Ok(l) => l,
-        Err(e) => {
-            return Err(Box::try_from(format!(
-                "Failed to open port {:?}: {}",
-                config.listen_port, e
-            ))
-            .unwrap())
-        }
-    };
+    let listen_port = config.listen_port.unwrap_or(5279);
+    let listener = TcpListener::bind(format!("{}:{:?}", "0.0.0.0", listen_port))
+        .await
+        .with_context(|| format!("Failed to open port {:?}", listen_port))?;
+
     println!(
         "Started listening for incoming connections on port {:?}",
-        config.listen_port
+        listen_port
     );
 
     let _listener_task: JoinHandle<io::Result<()>> = tokio::spawn(async move {
@@ -108,18 +91,31 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
             let i = inverter.clone();
             let pool = db_pool.clone();
+            let addr = config.remote_address.clone();
 
             tokio::spawn(async move {
                 let handler = ConnectionHandler {
                     inverter: i,
                     db_pool: pool,
+                    remote_address: addr,
                 };
-                if let Err(e) = handler.handle_connection(client, client_addr).await {
+
+                handler
+                    .handle_connection(client, client_addr)
+                    .await
+                    .with_context(|| {
+                        format!(
+                            "An error occurred while handling a connection from {}",
+                            client_addr
+                        )
+                    })
+
+                /*                if let Err(e) = handler.handle_connection(client, client_addr).await {
                     eprintln!(
                         "An error occurred while handling a connection from {}: {}",
                         client_addr, e
                     );
-                }
+                }*/
             });
         }
     });
@@ -146,6 +142,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 struct ConnectionHandler {
     inverter: Arc<Vec<GrowattV6EnergyFragment>>,
     db_pool: sqlx::Pool<sqlx::Postgres>,
+    remote_address: Option<String>,
 }
 
 impl ConnectionHandler {
@@ -252,16 +249,16 @@ impl ConnectionHandler {
         &self,
         mut client_stream: TcpStream,
         client_addr: SocketAddr,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<()> {
         println!("New connection from {}", client_addr);
 
-        let mut remote_server = match TcpStream::connect("server.growatt.com:5279").await {
-            Ok(result) => result,
-            Err(e) => {
-                eprintln!("Error establishing connection: {e}");
-                return Err(Box::new(e));
-            }
-        };
+        let mut remote_server = TcpStream::connect(
+            self.remote_address
+                .as_ref()
+                .unwrap_or(&"server.growatt.com:5279".to_string()),
+        )
+        .await
+        .context("Error establishing remote connection")?;
 
         let (mut client_read, mut client_write) = client_stream.split();
         let (mut remote_read, mut remote_write) = remote_server.split();
@@ -322,7 +319,7 @@ fn get_cli_conf() -> Command {
         .version(crate_version!())
         .author(crate_authors!("\n"))
         .about(crate_description!())
-        .arg_required_else_help(true)
+        // .arg_required_else_help(true)
         .arg(
             arg!(config_path: -c --config_path <PATH> "Path to configuration file")
                 .help("Path to the config file to use to run the server")

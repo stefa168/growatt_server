@@ -4,9 +4,10 @@ use tokio::fs;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
     pub inverters_dir: Option<String>,
-    pub db: DbConfig,
+    #[serde(alias = "db")]
+    pub database: DbConfig,
     pub listen_port: Option<u16>,
-    pub remote_port: Option<u16>,
+    pub remote_address: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -18,8 +19,8 @@ pub struct DbConfig {
     pub database: String,
 }
 
-pub async fn load_from_yaml(path: &str) -> Result<Config, String> {
-    let yaml = fs::read_to_string(path).await.map_err(|e| e.to_string())?;
-    let config: Config = serde_yaml::from_str(&yaml).map_err(|e| e.to_string())?;
+pub async fn load_from_yaml(path: &str) -> anyhow::Result<Config> {
+    let yaml = fs::read_to_string(path).await?;
+    let config = serde_yaml::from_str(&yaml)?;
     Ok(config)
 }
