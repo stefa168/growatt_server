@@ -1,3 +1,4 @@
+use clap::{arg, crate_authors, crate_description, crate_name, crate_version, Command};
 use data_message::DataMessage;
 use futures::FutureExt;
 use serde::{Deserialize, Serialize};
@@ -16,6 +17,7 @@ use tokio::{fs, signal};
 use tokio_util::sync::CancellationToken;
 use types::MessageType;
 
+mod config;
 mod data_message;
 mod types;
 mod utils;
@@ -45,31 +47,60 @@ pub struct GrowattV6EnergyFragment {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    let args = get_cli_conf().get_matches();
+
+    let config_path: &String = args.get_one("config_path").unwrap();
+    let config = match config::load_from_yaml(config_path).await {
+        Ok(config) => config,
+        Err(e) => {
+            return Err(Box::try_from(format!(
+                "Could not find configuration file in specified path. {}",
+                e
+            ))
+            .unwrap());
+        }
+    };
+
     let db_opts = PgConnectOptions::new()
-        .username("postgres")
-        .password("password")
-        .host("timescale")
-        .port(5432)
-        .database("postgres");
+        .username(&config.db.username)
+        .password(&config.db.password)
+        .host(&config.db.host)
+        .port(config.db.port)
+        .database(&config.db.database);
 
     let db_pool = match PgPool::connect_with(db_opts).await {
         Ok(pool) => pool,
         Err(e) => {
             return Err(
-                Box::try_from(format!("Failed to connect to the Database.\n{}", e)).unwrap(),
+                Box::try_from(format!("Failed to connect to the Database. {}", e)).unwrap(),
             );
         }
     };
 
-    let json = fs::read_to_string("./inverters/Growatt v6.json").await?;
+    let json = fs::read_to_string(
+        config
+            .inverters_dir
+            .unwrap_or("./inverters/Growatt v6.json".to_string()),
+    )
+    .await?;
     let inverter: Arc<Vec<GrowattV6EnergyFragment>> = Arc::new(serde_json::from_str(&json)?);
 
     // https://github.com/mqudsi/tcpproxy/blob/master/src/main.rs
-    let listener = match TcpListener::bind("0.0.0.0:5279").await {
+    let listener = match TcpListener::bind(format!("{}:{:?}", "0.0.0.0", config.listen_port)).await
+    {
         Ok(l) => l,
-        Err(e) => return Err(Box::try_from(format!("Failed to open port 5279: {}", e)).unwrap()),
+        Err(e) => {
+            return Err(Box::try_from(format!(
+                "Failed to open port {:?}: {}",
+                config.listen_port, e
+            ))
+            .unwrap())
+        }
     };
-    println!("Listening on {}", listener.local_addr().unwrap());
+    println!(
+        "Started listening for incoming connections on port {:?}",
+        config.listen_port
+    );
 
     let _listener_task: JoinHandle<io::Result<()>> = tokio::spawn(async move {
         loop {
@@ -166,9 +197,9 @@ impl ConnectionHandler {
                 key,
                 value
             )
-                .execute(&self.db_pool)
-                .await
-                .unwrap();
+            .execute(&self.db_pool)
+            .await
+            .unwrap();
         }
 
         data
@@ -181,9 +212,9 @@ impl ConnectionHandler {
         abort: CancellationToken,
         handle_data: bool,
     ) -> tokio::io::Result<usize>
-        where
-            R: tokio::io::AsyncRead + Unpin,
-            W: tokio::io::AsyncWrite + Unpin,
+    where
+        R: tokio::io::AsyncRead + Unpin,
+        W: tokio::io::AsyncWrite + Unpin,
     {
         let mut bytes_forwarded = 0;
         let mut buf = [0u8; BUF_SIZE];
@@ -284,4 +315,17 @@ impl ConnectionHandler {
 
         Ok(())
     }
+}
+
+fn get_cli_conf() -> Command {
+    Command::new(crate_name!())
+        .version(crate_version!())
+        .author(crate_authors!("\n"))
+        .about(crate_description!())
+        .arg_required_else_help(true)
+        .arg(
+            arg!(config_path: -c --config_path <PATH> "Path to configuration file")
+                .help("Path to the config file to use to run the server")
+                .default_value("./config.yaml"),
+        )
 }
