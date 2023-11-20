@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use clap::{arg, crate_authors, crate_description, crate_name, crate_version, Command};
 use data_message::DataMessage;
+use data_message::MessageType;
 use futures::FutureExt;
 use serde::{Deserialize, Serialize};
 use sqlx::postgres::PgConnectOptions;
@@ -15,11 +16,9 @@ use tokio::signal::unix::SignalKind;
 use tokio::task::JoinHandle;
 use tokio::{fs, signal};
 use tokio_util::sync::CancellationToken;
-use types::MessageType;
 
 mod config;
 mod data_message;
-mod types;
 mod utils;
 
 const BUF_SIZE: usize = 65535;

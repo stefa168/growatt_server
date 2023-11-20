@@ -1,6 +1,6 @@
-use crate::types::MessageType;
 use crate::{utils, Datatype, GrowattV6EnergyFragment};
 use chrono::{DateTime, Local};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::f32;
 use std::sync::Arc;
@@ -123,4 +123,14 @@ impl DataMessage {
             time,
         })
     }
+}
+
+#[derive(Debug, sqlx::Type, Serialize, Deserialize)]
+pub enum MessageType {
+    Data3,
+    Data4,
+    Ping,
+    Configure,
+    Identify,
+    Unknown,
 }
