@@ -73,9 +73,6 @@ async fn main() -> Result<()> {
     let config_path: &String = args.get_one("config_path").unwrap();
     info!("Loading configuration from `{}`", config_path);
 
-    // let span = tracing::span!(tracing::Level::ERROR, "startup");
-    // let _enter = span.enter();
-
     let config = config::load_from_yaml(config_path)
         .await
         .expect_or_log("Failed to load the configuration file");

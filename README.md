@@ -95,6 +95,9 @@ services:
       - "5279:5279/tcp"
     volumes:
       - ./inverters:/usr/local/bin/inverters
+      - config.yaml:/usr/local/bin/config.yaml
+    environment:
+      LOG_LEVEL: INFO
 ```
 
 ---
@@ -104,9 +107,17 @@ Please note that the `inverters` folder is mandatory, and must contain the (curr
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Right now it is sufficient to run the executable, or start the container.
+To start the server it is simply a matter of running the executable.
+By default, it looks for a configuration file in the same directory, however it can be changed with the `-c` or `--config_path` optional parameter.
 
-Please note that currently the server does not relay the data to anything else except Growatt's servers on `server.growatt.com`.
+Please take a look at the default [configuration file for more information](config.yaml). (Soon they will be listed here too)
+
+If a log level different from `INFO` is necessary, set the environment variable `LOG_LEVEL` to the required level (`DEBUG`, `TRACE`, etc.)
+
+The server will relay data to the endpoint specified in the configuration file.
+It defaults to Growatt's servers on `server.growatt.com`.
+
+For more command-line options, use the `--help` option.
 
 <!-- ROADMAP -->
 ## Roadmap
@@ -120,7 +131,7 @@ Please note that currently the server does not relay the data to anything else e
         - [x] Protocol v6
         - [ ] ?
 - [ ] Data
-    - [ ] Storage
+    - [x] Storage
     - [ ] MQTT
     - [ ] Home Assistant
 - [ ] Frontend
