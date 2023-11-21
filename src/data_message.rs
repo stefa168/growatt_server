@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::f32;
 use std::sync::Arc;
-use tracing::{debug, info};
+use tracing::debug;
 
 #[derive(Debug)]
 pub struct DataMessage {
@@ -29,7 +29,6 @@ impl DataMessage {
         let mut data = HashMap::new();
 
         let time = Local::now();
-        info!("{}", time);
 
         for fragment in inverter_fragments.iter() {
             let base_offset = fragment.offset as usize;

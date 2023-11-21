@@ -1,3 +1,4 @@
+use crate::config::Config;
 use anyhow::{Context, Result};
 use clap::{arg, crate_authors, crate_description, crate_name, crate_version, Command};
 use data_message::DataMessage;
@@ -9,6 +10,7 @@ use sqlx::PgPool;
 use std::fmt::Write;
 use std::io;
 use std::net::SocketAddr;
+use std::str::FromStr;
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
@@ -18,6 +20,7 @@ use tokio::{fs, signal};
 use tokio_util::sync::CancellationToken;
 use tracing::level_filters::LevelFilter;
 use tracing::{debug, error, info, instrument};
+use tracing_appender::non_blocking::WorkerGuard;
 use tracing_panic::panic_hook;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
@@ -54,28 +57,24 @@ pub struct GrowattV6EnergyFragment {
 #[tokio::main]
 #[instrument]
 async fn main() -> Result<()> {
-    let filter = EnvFilter::builder()
-        .with_default_directive(LevelFilter::INFO.into())
-        .with_env_var("LOG_LEVEL")
-        .from_env_lossy();
-
-    tracing_subscriber::registry()
-        .with(fmt::layer())
-        .with(filter)
-        .init();
-
-    std::panic::set_hook(Box::new(panic_hook));
-
-    info!("{} version {} started.", crate_name!(), crate_version!());
-
+    // First thing: load the arguments and configuration file.
     let args = get_cli_conf().get_matches();
 
     let config_path: &String = args.get_one("config_path").unwrap();
-    info!("Loading configuration from `{}`", config_path);
 
     let config = config::load_from_yaml(config_path)
         .await
-        .expect_or_log("Failed to load the configuration file");
+        .context("Failed to load the configuration file")?;
+
+    // Set up logging
+
+    let _logger_guard = init_logging(&config);
+
+    // Hook to log also panics with tracing
+    std::panic::set_hook(Box::new(panic_hook));
+
+    // Finally starting!
+    info!("{} version {} started.", crate_name!(), crate_version!());
 
     let db_opts = PgConnectOptions::new()
         .username(&config.database.username)
@@ -155,6 +154,28 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
+fn init_logging(config: &Config) -> WorkerGuard {
+    let base_logging = config.logging_level.clone().unwrap_or("info".to_string());
+    let base_logging = LevelFilter::from_str(&base_logging).unwrap();
+
+    let filter = EnvFilter::builder()
+        .with_default_directive(base_logging.into())
+        .with_env_var("LOG_LEVEL")
+        .from_env_lossy();
+
+    let file_appender = tracing_appender::rolling::daily("./logs", "growatt_server");
+    let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+
+    tracing_subscriber::registry()
+        .with(fmt::layer())
+        // .with(filter)
+        .with(filter)
+        .with(fmt::layer().with_writer(non_blocking))
+        .init();
+
+    _guard
+}
+
 struct ConnectionHandler {
     inverter: Arc<Vec<GrowattV6EnergyFragment>>,
     db_pool: sqlx::Pool<sqlx::Postgres>,
@@ -165,17 +186,31 @@ impl ConnectionHandler {
     async fn handle_data<'a>(&self, data: &'a [u8]) -> &'a [u8] {
         let bytes = utils::unscramble_data(data);
 
+        let data_length = u16::from_be_bytes(bytes[4..6].try_into().unwrap());
+
+        fn byte_to_type(b: u8) -> String {
+            match b {
+                0x03 => "Data3".to_string(),
+                0x04 => "Data4".to_string(),
+                0x16 => "Ping".to_string(),
+                0x18 => "Configure".to_string(),
+                0x19 => "Identify".to_string(),
+                v => format!("Unknown ({})", v),
+            }
+        }
+
         info!(
-            "New message! {}",
+            "New {} message received, {} bytes long.",
+            byte_to_type(bytes[7]),
+            data_length
+        );
+        debug!(
+            "Message data: {}",
             bytes.iter().fold(String::new(), |mut output, b| {
                 write!(output, "{:02x}", b).unwrap();
                 output
             })
         );
-
-        let data_length = u16::from_be_bytes(bytes[4..6].try_into().unwrap());
-
-        debug!("Data length: {data_length} bytes");
 
         let message = match bytes[7] {
             0x03 => DataMessage::placeholder(&bytes, MessageType::Data3),

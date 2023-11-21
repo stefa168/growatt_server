@@ -8,6 +8,7 @@ pub struct Config {
     pub database: DbConfig,
     pub listen_port: Option<u16>,
     pub remote_address: Option<String>,
+    pub logging_level: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
