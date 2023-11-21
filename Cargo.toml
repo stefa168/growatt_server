@@ -26,6 +26,11 @@ bytes = "1.5.0"
 chrono = "0.4.31"
 clap = { version = "4.4.8", features = ["color", "cargo"] }
 anyhow = { version = "1.0.75", features = ["backtrace"] }
+tracing = { version = "0.1.40", features = ["attributes", "log"] }
+tracing-subscriber = { version = "0.3.18",features = ["env-filter", "chrono"] }
+tracing-futures = "0.2.5"
+tracing-unwrap = "0.10.0"
+tracing-panic = "0.1.1"
 
 [dependencies.sqlx]
 version = "0.7.2"

@@ -16,6 +16,13 @@ use tokio::signal::unix::SignalKind;
 use tokio::task::JoinHandle;
 use tokio::{fs, signal};
 use tokio_util::sync::CancellationToken;
+use tracing::level_filters::LevelFilter;
+use tracing::{debug, error, info, instrument};
+use tracing_panic::panic_hook;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::{fmt, EnvFilter};
+use tracing_unwrap::ResultExt;
 
 mod config;
 mod data_message;
@@ -45,14 +52,33 @@ pub struct GrowattV6EnergyFragment {
 }
 
 #[tokio::main]
+#[instrument]
 async fn main() -> Result<()> {
+    let filter = EnvFilter::builder()
+        .with_default_directive(LevelFilter::INFO.into())
+        .with_env_var("LOG_LEVEL")
+        .from_env_lossy();
+
+    tracing_subscriber::registry()
+        .with(fmt::layer())
+        .with(filter)
+        .init();
+
+    std::panic::set_hook(Box::new(panic_hook));
+
+    info!("{} version {} started.", crate_name!(), crate_version!());
+
     let args = get_cli_conf().get_matches();
 
     let config_path: &String = args.get_one("config_path").unwrap();
+    info!("Loading configuration from `{}`", config_path);
+
+    // let span = tracing::span!(tracing::Level::ERROR, "startup");
+    // let _enter = span.enter();
 
     let config = config::load_from_yaml(config_path)
         .await
-        .context("Failed to load the configuration file")?;
+        .expect_or_log("Failed to load the configuration file");
 
     let db_opts = PgConnectOptions::new()
         .username(&config.database.username)
@@ -61,10 +87,17 @@ async fn main() -> Result<()> {
         .port(config.database.port)
         .database(&config.database.database);
 
+    info!(
+        "Connecting to database at {}:{}",
+        &config.database.host, &config.database.port
+    );
     let db_pool = PgPool::connect_with(db_opts)
         .await
-        .context("Failed to connect to the Database")?;
+        .expect_or_log("Failed to connect to the Database");
 
+    if config.inverters_dir.is_none() {
+        info!("No inverters path specified. Using default");
+    }
     let json = fs::read_to_string(
         config
             .inverters_dir
@@ -77,9 +110,9 @@ async fn main() -> Result<()> {
     let listen_port = config.listen_port.unwrap_or(5279);
     let listener = TcpListener::bind(format!("{}:{:?}", "0.0.0.0", listen_port))
         .await
-        .with_context(|| format!("Failed to open port {:?}", listen_port))?;
+        .expect_or_log(format!("Failed to open port {:?}", listen_port).as_str());
 
-    println!(
+    info!(
         "Started listening for incoming connections on port {:?}",
         listen_port
     );
@@ -99,22 +132,9 @@ async fn main() -> Result<()> {
                     remote_address: addr,
                 };
 
-                handler
-                    .handle_connection(client, client_addr)
-                    .await
-                    .with_context(|| {
-                        format!(
-                            "An error occurred while handling a connection from {}",
-                            client_addr
-                        )
-                    })
-
-                /*                if let Err(e) = handler.handle_connection(client, client_addr).await {
-                    eprintln!(
-                        "An error occurred while handling a connection from {}: {}",
-                        client_addr, e
-                    );
-                }*/
+                if let Err(e) = handler.handle_connection(client, client_addr).await {
+                    error!(error = %e, "An error occurred while handling a connection from {}", client_addr);
+                }
             });
         }
     });
@@ -133,7 +153,7 @@ async fn main() -> Result<()> {
     tokio::pin!(ctrl_c, sigterm);
     futures::future::select(ctrl_c, sigterm).await;
 
-    println!("Received shutdown signal. Stopping.");
+    info!("Received shutdown signal. Stopping.");
 
     Ok(())
 }
@@ -148,7 +168,7 @@ impl ConnectionHandler {
     async fn handle_data<'a>(&self, data: &'a [u8]) -> &'a [u8] {
         let bytes = utils::unscramble_data(data);
 
-        println!(
+        info!(
             "New message! {}",
             bytes.iter().fold(String::new(), |mut output, b| {
                 write!(output, "{:02x}", b).unwrap();
@@ -158,7 +178,7 @@ impl ConnectionHandler {
 
         let data_length = u16::from_be_bytes(bytes[4..6].try_into().unwrap());
 
-        println!("Data length: {data_length} bytes");
+        debug!("Data length: {data_length} bytes");
 
         let message = match bytes[7] {
             0x03 => DataMessage::placeholder(&bytes, MessageType::Data3),
@@ -171,7 +191,7 @@ impl ConnectionHandler {
 
         let datamessage = message.unwrap();
 
-        println!("Message type: {:?}", &datamessage.data_type);
+        debug!("Message type: {:?}", &datamessage.data_type);
 
         let r = sqlx::query!("INSERT INTO inverter_messages (raw, type, header, time) VALUES ($1, $2, $3, $4) returning id",
             datamessage.raw, serde_json::to_string(&datamessage.data_type).unwrap(), datamessage.header, datamessage.time)
@@ -180,7 +200,7 @@ impl ConnectionHandler {
             .await;
 
         if let Err(e) = r {
-            println!("{}", e);
+            error!(error=%e);
             return data;
         }
 
@@ -249,7 +269,7 @@ impl ConnectionHandler {
         mut client_stream: TcpStream,
         client_addr: SocketAddr,
     ) -> Result<()> {
-        println!("New connection from {}", client_addr);
+        info!("New connection from {}", client_addr);
 
         let mut remote_server = TcpStream::connect(
             self.remote_address
@@ -277,35 +297,37 @@ impl ConnectionHandler {
             })
         };
 
+        // Actions to be done after the connection has been closed by either of the two peers
+        // (local or remote)
         match client_copied {
             Ok(count) => {
-                eprintln!(
+                info!(
                     "Transferred {} bytes from proxy client {} to upstream server",
                     count, client_addr
                 );
             }
             Err(err) => {
-                eprintln!(
+                error!(
+                    error=%err,
                     "Error writing bytes from proxy client {} to upstream server",
                     client_addr
                 );
-                eprintln!("{}", err);
             }
         };
 
         match remote_copied {
             Ok(count) => {
-                eprintln!(
+                info!(
                     "Transferred {} bytes from upstream server to proxy client {}",
                     count, client_addr
                 );
             }
             Err(err) => {
-                eprintln!(
+                error!(
+                    error=%err,
                     "Error writing bytes from upstream server to proxy client {}",
                     client_addr
                 );
-                eprintln!("{}", err);
             }
         };
 

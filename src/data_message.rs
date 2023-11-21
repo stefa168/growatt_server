@@ -1,9 +1,11 @@
 use crate::{utils, Datatype, GrowattV6EnergyFragment};
+use anyhow::Result;
 use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::f32;
 use std::sync::Arc;
+use tracing::{debug, info};
 
 #[derive(Debug)]
 pub struct DataMessage {
@@ -18,7 +20,7 @@ impl DataMessage {
     pub fn data4(
         inverter_fragments: Arc<Vec<GrowattV6EnergyFragment>>,
         bytes: &[u8],
-    ) -> Result<Self, String> {
+    ) -> Result<Self> {
         let bytes = bytes.to_owned();
 
         let header: Vec<u8> = bytes[0..=7].to_vec();
@@ -27,6 +29,7 @@ impl DataMessage {
         let mut data = HashMap::new();
 
         let time = Local::now();
+        info!("{}", time);
 
         for fragment in inverter_fragments.iter() {
             let base_offset = fragment.offset as usize;
@@ -40,8 +43,8 @@ impl DataMessage {
                     .filter(|c| c.is_alphanumeric())
                     .collect::<String>(),
                 Datatype::Date => {
-                    println!(
-                        "{}/{}/{} {}:{}:{}",
+                    debug!(
+                        "Got date type with value: {}/{}/{} {}:{}:{}",
                         slice[0], slice[1], slice[2], slice[3], slice[4], slice[5]
                     );
                     let year = 2000 + <i32>::from(slice[0]);
@@ -64,6 +67,7 @@ impl DataMessage {
                         four_bytes.insert(0, 0);
                     }
 
+                    // todo log and continue with next fragment
                     let four_bytes: [u8; 4] = four_bytes
                         .try_into()
                         .map_err(|e| {
@@ -109,7 +113,7 @@ impl DataMessage {
         })
     }
 
-    pub fn placeholder(bytes: &[u8], message_type: MessageType) -> Result<Self, String> {
+    pub fn placeholder(bytes: &[u8], message_type: MessageType) -> Result<Self> {
         let bytes = bytes.to_owned();
         let header: Vec<u8> = bytes[0..=7].to_vec();
 
