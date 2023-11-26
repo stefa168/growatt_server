@@ -1,5 +1,5 @@
 alter table inverter_messages
-    add column inverter_sn varchar(64) default null;
+    add column if not exists inverter_sn varchar(64) default null;
 
 -- We need to add to all the rows of inverter_messages of which the id corresponds to a message_data.message_id
 -- the inverter_sn of the corresponding message_data row.
