@@ -1,4 +1,6 @@
-log_level: INFO
+logging:
+  log_level: INFO
+  log_directory: ./logs
 
 database:
   username: postgres

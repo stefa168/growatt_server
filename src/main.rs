@@ -62,16 +62,13 @@ async fn main() -> Result<()> {
 
     let config_path: &String = args.get_one("config_path").unwrap();
 
-    let config = config::load_from_yaml(config_path)
-        .await
-        .context("Failed to load the configuration file")?;
+    let config = config::load_from_yaml(config_path).await.context(format!(
+        "Failed to load the configuration file from {}",
+        config_path
+    ))?;
 
     // Set up logging
-
     let _logger_guard = init_logging(&config);
-
-    // Hook to log also panics with tracing
-    std::panic::set_hook(Box::new(panic_hook));
 
     // Finally starting!
     info!("{} version {} started.", crate_name!(), crate_version!());
@@ -155,25 +152,38 @@ async fn main() -> Result<()> {
 }
 
 fn init_logging(config: &Config) -> WorkerGuard {
-    let base_logging = config.logging_level.clone().unwrap_or("info".to_string());
-    let base_logging = LevelFilter::from_str(&base_logging).unwrap();
+    let options = config.logging.as_ref();
 
-    let filter = EnvFilter::builder()
+    let base_logging = LevelFilter::from_str(
+        &options
+            .and_then(|logging| logging.level.clone())
+            .unwrap_or("info".to_string()),
+    )
+    .unwrap();
+
+    let console_logging_filter = EnvFilter::builder()
         .with_default_directive(base_logging.into())
         .with_env_var("LOG_LEVEL")
         .from_env_lossy();
 
-    let file_appender = tracing_appender::rolling::daily("./logs", "growatt_server");
-    let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+    let file_appender = tracing_appender::rolling::daily(
+        options
+            .and_then(|l| l.directory.clone())
+            .unwrap_or("./logs".to_string()),
+        "growatt_server",
+    );
+    let (non_blocking, guard) = tracing_appender::non_blocking(file_appender);
 
     tracing_subscriber::registry()
         .with(fmt::layer())
-        // .with(filter)
-        .with(filter)
+        .with(console_logging_filter)
         .with(fmt::layer().with_writer(non_blocking))
         .init();
 
-    _guard
+    // Hook to log also panics with tracing
+    std::panic::set_hook(Box::new(panic_hook));
+
+    guard
 }
 
 struct ConnectionHandler {
