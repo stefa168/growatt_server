@@ -14,6 +14,7 @@ pub struct DataMessage {
     pub data_type: MessageType,
     pub data: HashMap<String, String>,
     pub time: DateTime<Local>,
+    pub serial_number: Option<String>,
 }
 
 impl DataMessage {
@@ -29,6 +30,7 @@ impl DataMessage {
         let mut data = HashMap::new();
 
         let time = Local::now();
+        let mut serial_number: Option<String> = None;
 
         for fragment in inverter_fragments.iter() {
             let base_offset = fragment.offset as usize;
@@ -37,10 +39,19 @@ impl DataMessage {
             let slice = &bytes[base_offset..end_offset];
 
             let string_value = match &fragment.fragment_type {
-                Datatype::String => utils::hex_bytes_to_ascii(slice)
-                    .chars()
-                    .filter(|c| c.is_alphanumeric())
-                    .collect::<String>(),
+                Datatype::String => {
+                    let s = utils::hex_bytes_to_ascii(slice)
+                        .chars()
+                        .filter(|c| c.is_alphanumeric())
+                        .collect::<String>();
+
+                    // todo make Serial Number identification less hardcoded
+                    if &fragment.name == "Inverter SN" {
+                        serial_number = Some(s.clone());
+                    }
+
+                    s
+                }
                 Datatype::Date => {
                     debug!(
                         "Got date type with value: {}/{}/{} {}:{}:{}",
@@ -109,6 +120,7 @@ impl DataMessage {
             data_type: MessageType::Data4,
             data,
             time,
+            serial_number,
         })
     }
 
@@ -124,6 +136,7 @@ impl DataMessage {
             data_type: message_type,
             data: Default::default(),
             time,
+            serial_number: None,
         })
     }
 }

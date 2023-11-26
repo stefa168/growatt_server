@@ -89,7 +89,10 @@ async fn main() -> Result<()> {
         .expect_or_log("Failed to connect to the Database");
 
     let migrator = sqlx::migrate!("./migrations");
-    migrator.run(&db_pool).await.expect_or_log("Failed migrating the database to the latest version");
+    migrator
+        .run(&db_pool)
+        .await
+        .expect_or_log("Failed migrating the database to the latest version");
 
     if config.inverters_dir.is_none() {
         info!("No inverters path specified. Using default");
