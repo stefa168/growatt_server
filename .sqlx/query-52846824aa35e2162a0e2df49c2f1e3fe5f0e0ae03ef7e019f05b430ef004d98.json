@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO inverter_messages (raw, type, header, time) VALUES ($1, $2, $3, $4) returning id",
+  "query": "INSERT INTO inverter_messages (raw, type, header, time, inverter_sn) VALUES ($1, $2, $3, $4, $5) returning id",
   "describe": {
     "columns": [
       {
@@ -14,12 +14,13 @@
         "Bytea",
         "Text",
         "Bytea",
-        "Timestamptz"
+        "Timestamptz",
+        "Varchar"
       ]
     },
     "nullable": [
       false
     ]
   },
-  "hash": "0f2e89b0268773ea1a09a1671d41652e5edba434d94d2a7738e5c166668c779c"
+  "hash": "52846824aa35e2162a0e2df49c2f1e3fe5f0e0ae03ef7e019f05b430ef004d98"
 }

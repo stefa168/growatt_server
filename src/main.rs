@@ -241,8 +241,9 @@ impl ConnectionHandler {
 
         debug!("Message type: {:?}", &datamessage.data_type);
 
-        let r = sqlx::query!("INSERT INTO inverter_messages (raw, type, header, time) VALUES ($1, $2, $3, $4) returning id",
-            datamessage.raw, serde_json::to_string(&datamessage.data_type).unwrap(), datamessage.header, datamessage.time)
+        // First save the complete message
+        let r = sqlx::query!("INSERT INTO inverter_messages (raw, type, header, time, inverter_sn) VALUES ($1, $2, $3, $4, $5) returning id",
+            datamessage.raw, serde_json::to_string(&datamessage.data_type).unwrap(), datamessage.header, datamessage.time, datamessage.serial_number)
             .fetch_one(&self.db_pool)
             // todo handle unlikely scenarios
             .await;
@@ -254,6 +255,7 @@ impl ConnectionHandler {
 
         let id = r.unwrap().id;
 
+        // Then all the additional deserialized parts of the message (if present)
         for (key, value) in datamessage.data {
             sqlx::query!(
                 "INSERT INTO message_data (message_id, key, value) VALUES ($1, $2, $3)",

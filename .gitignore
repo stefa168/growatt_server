@@ -6,6 +6,7 @@ timescale-data
 .idea/dataSources.xml
 .idea/git_toolbox_prj.xml
 .idea/remote-targets.xml
+playground.sql
 
 ### Intellij ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
