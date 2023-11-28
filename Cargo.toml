@@ -1,6 +1,6 @@
 [package]
 name = "growatt_server"
-version = "0.2.0"
+version = "0.1.3-a"
 edition = "2021"
 authors = ["Stefano Vittorio Porta <stefa168@hotmail.it>"]
 description = "Server that listens for Growatt inverters and copies the data before relaying it to remote."
