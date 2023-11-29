@@ -31,7 +31,7 @@ jobs:
         with:
           images: |
             stefa168/growatt_server
-            ghcr.io/${{ github.repository_owner }}/growatt_server/growatt_server
+            ghcr.io/${{ github.repository_owner }}/growatt_server
           tags: |
             type=schedule
             type=ref,event=branch
@@ -91,7 +91,7 @@ jobs:
       - name: Scan the image
         uses: anchore/sbom-action@v0
         with:
-          image: ghcr.io/${{ github.repository_owner }}/git-cliff/git-cliff
+          image: ghcr.io/${{ github.repository_owner }}/growatt_server
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
