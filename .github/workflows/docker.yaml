@@ -21,6 +21,9 @@ jobs:
   docker:
     name: Docker Build and Push
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -87,6 +90,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
+
 
       - name: Scan the image
         uses: anchore/sbom-action@v0
