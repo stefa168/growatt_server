@@ -1,0 +1,145 @@
+# Original file from https://github.com/orhun/git-cliff
+name: Continuous Integration
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - dev
+  schedule:
+    - cron: "0 0 * * 0"
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Install toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Check
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --locked --verbose
+      - name: Check without default features
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --locked --no-default-features --verbose
+
+  typos:
+    name: Typos
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Check typos
+        uses: crate-ci/typos@master
+
+  test:
+    name: Test suite
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Install toolchain
+        uses: dtolnay/rust-toolchain@nightly
+      - name: Checkout
+        if: github.event_name != 'pull_request'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Checkout
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Setup cargo-tarpaulin
+        uses: taiki-e/install-action@cargo-tarpaulin
+      - name: Run tests
+        run: cargo tarpaulin --out xml --verbose
+      - name: Upload reports to codecov
+        uses: codecov/codecov-action@v3
+        with:
+          name: code-coverage-report
+          file: cobertura.xml
+          flags: unit-tests
+          fail_ci_if_error: true
+          verbose: true
+
+  clippy:
+    name: Lints
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Install toolchain
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: clippy
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Check the lints
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --tests --verbose -- -D warnings
+
+  rustfmt:
+    name: Formatting
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Install toolchain
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Check the formatting
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check --verbose
+
+  lychee:
+    name: Links
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Check the links
+        uses: lycheeverse/lychee-action@v1
+        with:
+          args: -v --max-concurrency 1 *.md
+          fail: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  audit:
+    name: Audit check
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run cargo-audit
+        uses: actions-rs/audit-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  msrv:
+    name: Check Rust version
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run cargo-msrv
+        shell: bash
+        run: |
+          curl -s 'https://api.github.com/repos/foresterre/cargo-msrv/releases' | \
+            jq -r "[.[] | select(.prerelease == false)][0].assets[] | \
+            select(.name | ascii_downcase | test(\"linux.*x86_64|x86_64.*linux\")).browser_download_url" | \
+            wget -qi -
+          tar -xvf cargo-msrv*.tar* -C  ~/.cargo/bin/ cargo-msrv
+          for package in $(cargo metadata --format-version 1 | jq -r ".workspace_members[]" | awk '{print $1}'); do
+            printf "Checking MSRV for $package..."
+            cargo msrv --output-format json --path "$package" verify | tail -n 1 | jq --exit-status '.success'
+          done
