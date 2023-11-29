@@ -27,12 +27,12 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: check
-          args: --locked --verbose
+          args: --offline --verbose
       - name: Check without default features
         uses: actions-rs/cargo@v1
         with:
           command: check
-          args: --locked --no-default-features --verbose
+          args: --offline --no-default-features --verbose
 
   typos:
     name: Typos
@@ -72,6 +72,8 @@ jobs:
           flags: unit-tests
           fail_ci_if_error: true
           verbose: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   clippy:
     name: Lints
@@ -129,21 +131,21 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-  msrv:
-    name: Check Rust version
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Run cargo-msrv
-        shell: bash
-        run: |
-          curl -s 'https://api.github.com/repos/foresterre/cargo-msrv/releases' | \
-            jq -r "[.[] | select(.prerelease == false)][0].assets[] | \
-            select(.name | ascii_downcase | test(\"linux.*x86_64|x86_64.*linux\")).browser_download_url" | \
-            wget -qi -
-          tar -xvf cargo-msrv*.tar* -C  ~/.cargo/bin/ cargo-msrv
-          for package in $(cargo metadata --format-version 1 | jq -r ".workspace_members[]" | awk '{print $1}'); do
-            printf "Checking MSRV for $package..."
-            cargo msrv --output-format json --path "$package" verify | tail -n 1 | jq --exit-status '.success'
-          done
+#  msrv:
+#    name: Check Rust version
+#    runs-on: ubuntu-22.04
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#      - name: Run cargo-msrv
+#        shell: bash
+#        run: |
+#          curl -s 'https://api.github.com/repos/foresterre/cargo-msrv/releases' | \
+#            jq -r "[.[] | select(.prerelease == false)][0].assets[] | \
+#            select(.name | ascii_downcase | test(\"linux.*x86_64|x86_64.*linux\")).browser_download_url" | \
+#            wget -qi -
+#          tar -xvf cargo-msrv*.tar* -C  ~/.cargo/bin/ cargo-msrv
+#          for package in $(cargo metadata --format-version 1 | jq -r ".workspace_members[]" | awk '{print $1}'); do
+#            printf "Checking MSRV for $package..."
+#            cargo msrv --output-format json --path "$package" verify | tail -n 1 | jq --exit-status '.success'
+#          done

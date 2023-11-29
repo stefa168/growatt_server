@@ -15,22 +15,17 @@ Readme template from https://github.com/othneildrew/Best-README-Template
 ![build-shield]
 
 <div align="center">
-<!-- 
-  <a href="https://github.com/github_username/repo_name">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
-  </a>
--->
 
 <h1 align="center">GrowattServer</h1>
 
   <p align="center">
     A server to intercept Growatt Inverters and Smart Energy Meters messages in order to use them locally.
     <br />
-    <!--<a href="https://github.com/github_username/repo_name"><strong>Explore the docs »</strong></a>-->
+    <!--<a href="https://github.com/stefa168/growatt_server"><strong>Explore the docs »</strong></a>-->
     <br />
-    <a href="https://github.com/github_username/repo_name/issues">Report Bug</a>
+    <a href="https://github.com/stefa168/growatt_server/issues">Report Bug</a>
     ·
-    <a href="https://github.com/github_username/repo_name/issues">Request Feature</a>
+    <a href="https://github.com/stefa168/growatt_server/issues">Request Feature</a>
   </p>
 </div>
 
@@ -136,7 +131,7 @@ For more command-line options, use the `--help` option.
     - [ ] Home Assistant
 - [ ] Frontend
 
-See the [open issues](https://github.com/github_username/repo_name/issues) for a full list of proposed features (and known issues).
+See the [open issues](https://github.com/stefa168/growatt_server/issues) for a full list of proposed features (and known issues).
 
 <!-- CONTRIBUTING -->
 ## Contributing
@@ -156,13 +151,9 @@ Distributed under the GNU GPL3 License. See `LICENSE.md` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Stefano Vittorio Porta - [@stefa168](https://twitter.com/stefa168)
+Stefano Vittorio Porta - @stefa168 on Twitter and Telegram
 
 Project Link: [https://github.com/stefa168/growatt_server](https://github.com/stefa168/growatt_server)
-
-
-
-
 
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
