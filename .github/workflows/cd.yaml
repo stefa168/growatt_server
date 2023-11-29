@@ -36,6 +36,9 @@ jobs:
     name: Publish binaries
     needs: generate-changelog
     runs-on: ${{ matrix.build.os }}
+    permissions:
+      contents: read
+      packages: write
     strategy:
       fail-fast: false
       matrix:
@@ -115,6 +118,9 @@ jobs:
           use-cross: true
           command: build
           args: --release --locked --target ${{ matrix.build.TARGET }}
+        env:
+          CARGO_TERM_COLOR: always
+          SQLX_OFFLINE: true
       - name: Prepare release assets
         shell: bash
         run: |
