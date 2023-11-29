@@ -6,6 +6,10 @@ on:
     tags:
       - "v*.*.*"
 
+env:
+  CARGO_TERM_COLOR: always
+  SQLX_OFFLINE: true
+
 jobs:
   generate-changelog:
     name: Generate changelog
