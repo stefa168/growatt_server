@@ -1,0 +1,158 @@
+# Original file from https://github.com/orhun/git-cliff
+name: Continuous Deployment
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  generate-changelog:
+    name: Generate changelog
+    runs-on: ubuntu-22.04
+    outputs:
+      release_body: ${{ steps.git-cliff.outputs.content }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check typos
+        uses: crate-ci/typos@master
+      - name: Generate a changelog
+        uses: orhun/git-cliff-action@main
+        id: git-cliff
+        with:
+          config: cliff.toml
+          args: -vv --latest --strip header
+        env:
+          OUTPUT: CHANGES.md
+
+  publish-binaries:
+    name: Publish binaries
+    needs: generate-changelog
+    runs-on: ${{ matrix.build.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        build:
+          - {
+            NAME: linux-x64-glibc,
+            OS: ubuntu-22.04,
+            TOOLCHAIN: stable,
+            TARGET: x86_64-unknown-linux-gnu,
+            NPM_PUBLISH: true,
+            PYPI_PUBLISH: true,
+          }
+          - {
+            NAME: linux-x64-musl,
+            OS: ubuntu-22.04,
+            TOOLCHAIN: stable,
+            TARGET: x86_64-unknown-linux-musl,
+            NPM_PUBLISH: false,
+            PYPI_PUBLISH: true,
+          }
+          - {
+            NAME: linux-x86-glibc,
+            OS: ubuntu-22.04,
+            TOOLCHAIN: stable,
+            TARGET: i686-unknown-linux-gnu,
+            NPM_PUBLISH: false,
+            PYPI_PUBLISH: true,
+          }
+          - {
+            NAME: linux-x86-musl,
+            OS: ubuntu-22.04,
+            TOOLCHAIN: stable,
+            TARGET: i686-unknown-linux-musl,
+            NPM_PUBLISH: false,
+            PYPI_PUBLISH: true,
+          }
+          - {
+            NAME: linux-arm64-glibc,
+            OS: ubuntu-22.04,
+            TOOLCHAIN: stable,
+            TARGET: aarch64-unknown-linux-gnu,
+            NPM_PUBLISH: true,
+            PYPI_PUBLISH: true,
+          }
+          - {
+            NAME: linux-arm64-musl,
+            OS: ubuntu-22.04,
+            TOOLCHAIN: stable,
+            TARGET: aarch64-unknown-linux-musl,
+            NPM_PUBLISH: false,
+            PYPI_PUBLISH: true,
+          }
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set the release version
+        shell: bash
+        run: echo "RELEASE_VERSION=${GITHUB_REF:11}" >> $GITHUB_ENV
+      - name: Install dependencies
+        shell: bash
+        run: |
+          if [[ "${{ matrix.build.NAME }}" = *"-musl" ]]; then
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends \
+              --allow-unauthenticated musl-tools
+          fi
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.build.TOOLCHAIN }}
+          target: ${{ matrix.build.TARGET }}
+          override: true
+      - name: Build (linux/macos)
+        if: matrix.build.OS != 'windows-2022'
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --release --locked --target ${{ matrix.build.TARGET }}
+      - name: Prepare release assets
+        shell: bash
+        run: |
+          mkdir -p release/{man,completions}
+          cp {LICENSE.md,README.md,CHANGELOG.md} release/
+          cp "target/${{ matrix.build.TARGET }}/release/growatt_server" release/
+          mv release/ growatt_server-${{ env.RELEASE_VERSION }}/
+      - name: Create release artifacts
+        shell: bash
+        run: |
+          tar -czvf git-cliff-${{ env.RELEASE_VERSION }}-${{ matrix.build.TARGET }}.tar.gz \
+            growatt_server-${{ env.RELEASE_VERSION }}/
+          shasum -a 512 growatt_server-${{ env.RELEASE_VERSION }}-${{ matrix.build.TARGET }}.tar.gz \
+            > growatt_server-${{ env.RELEASE_VERSION }}-${{ matrix.build.TARGET }}.tar.gz.sha512
+#      - name: Sign the release
+#        if: matrix.build.OS == 'ubuntu-22.04'
+#        run: |
+#          echo "${{ secrets.GPG_RELEASE_KEY }}" | base64 --decode > private.key
+#          echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --pinentry-mode=loopback \
+#            --passphrase-fd 0 --import private.key
+#          echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --pinentry-mode=loopback \
+#            --passphrase-fd 0 --detach-sign \
+#            git-cliff-${{ env.RELEASE_VERSION }}-${{ matrix.build.TARGET }}.tar.gz
+      - name: Publish to GitHub
+        if: ${{ !contains(env.RELEASE_VERSION, 'alpha') && !contains(env.RELEASE_VERSION, 'beta') && !contains(env.RELEASE_VERSION, 'rc') }}
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: growatt_server-${{ env.RELEASE_VERSION }}-${{ matrix.build.TARGET }}*
+          file_glob: true
+          overwrite: true
+          tag: ${{ github.ref }}
+          release_name: "Release v${{ env.RELEASE_VERSION }}"
+          body: "${{ needs.generate-changelog.outputs.release_body }}"
+      - name: Publish to GitHub (pre-release)
+        if: ${{ contains(env.RELEASE_VERSION, 'alpha') || contains(env.RELEASE_VERSION, 'beta') || contains(env.RELEASE_VERSION, 'rc') }}
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: growatt_server-${{ env.RELEASE_VERSION }}-${{ matrix.build.TARGET }}*
+          file_glob: true
+          overwrite: true
+          tag: ${{ github.ref }}
+          release_name: "Pre-release v${{ env.RELEASE_VERSION }}"
+          prerelease: true
