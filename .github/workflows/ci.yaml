@@ -27,12 +27,12 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: check
-          args: --offline --verbose
+          args: --verbose
       - name: Check without default features
         uses: actions-rs/cargo@v1
         with:
           command: check
-          args: --offline --no-default-features --verbose
+          args: --no-default-features --verbose
 
   typos:
     name: Typos
@@ -123,6 +123,7 @@ jobs:
   audit:
     name: Audit check
     runs-on: ubuntu-22.04
+    permissions: write-all
     steps:
       - name: Checkout
         uses: actions/checkout@v4
