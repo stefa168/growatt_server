@@ -36,9 +36,9 @@ jobs:
     name: Publish binaries
     needs: generate-changelog
     runs-on: ${{ matrix.build.os }}
-    permissions:
-      contents: read
-      packages: write
+    permissions: write-all
+    env:
+      SQLX_OFFLINE: true
     strategy:
       fail-fast: false
       matrix:
@@ -48,48 +48,36 @@ jobs:
             OS: ubuntu-22.04,
             TOOLCHAIN: stable,
             TARGET: x86_64-unknown-linux-gnu,
-            NPM_PUBLISH: true,
-            PYPI_PUBLISH: true,
           }
           - {
             NAME: linux-x64-musl,
             OS: ubuntu-22.04,
             TOOLCHAIN: stable,
             TARGET: x86_64-unknown-linux-musl,
-            NPM_PUBLISH: false,
-            PYPI_PUBLISH: true,
           }
           - {
             NAME: linux-x86-glibc,
             OS: ubuntu-22.04,
             TOOLCHAIN: stable,
             TARGET: i686-unknown-linux-gnu,
-            NPM_PUBLISH: false,
-            PYPI_PUBLISH: true,
           }
           - {
             NAME: linux-x86-musl,
             OS: ubuntu-22.04,
             TOOLCHAIN: stable,
             TARGET: i686-unknown-linux-musl,
-            NPM_PUBLISH: false,
-            PYPI_PUBLISH: true,
           }
           - {
             NAME: linux-arm64-glibc,
             OS: ubuntu-22.04,
             TOOLCHAIN: stable,
             TARGET: aarch64-unknown-linux-gnu,
-            NPM_PUBLISH: true,
-            PYPI_PUBLISH: true,
           }
           - {
             NAME: linux-arm64-musl,
             OS: ubuntu-22.04,
             TOOLCHAIN: stable,
             TARGET: aarch64-unknown-linux-musl,
-            NPM_PUBLISH: false,
-            PYPI_PUBLISH: true,
           }
     steps:
       - name: Checkout
@@ -111,16 +99,15 @@ jobs:
           toolchain: ${{ matrix.build.TOOLCHAIN }}
           target: ${{ matrix.build.TARGET }}
           override: true
-      - name: Build (linux/macos)
+      - name: Build
         if: matrix.build.OS != 'windows-2022'
         uses: actions-rs/cargo@v1
+        env:
+          SQLX_OFFLINE: true
         with:
           use-cross: true
           command: build
           args: --release --locked --target ${{ matrix.build.TARGET }}
-        env:
-          CARGO_TERM_COLOR: always
-          SQLX_OFFLINE: true
       - name: Prepare release assets
         shell: bash
         run: |
