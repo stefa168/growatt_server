@@ -107,7 +107,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p release/
-          cp {LICENSE.md,README.md,CHANGELOG.md,inverters/,config.yaml} release/
+          cp -r {LICENSE.md,README.md,CHANGELOG.md,inverters/,config.yaml} release/
           cp "target/${{ matrix.build.TARGET }}/release/growatt_server" release/
           mv release/ growatt_server-${{ env.RELEASE_VERSION }}/
       - name: Create release artifacts
