@@ -102,7 +102,7 @@ jobs:
       - name: Build
         env:
           SQLX_OFFLINE: true
-        run: cargo build --release --locked --target ${{ matrix.build.TARGET }}
+        run: cargo build --release --target ${{ matrix.build.TARGET }}
       - name: Prepare release assets
         shell: bash
         run: |
