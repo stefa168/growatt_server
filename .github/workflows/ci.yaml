@@ -24,15 +24,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Check
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --verbose
+        run: cargo test --all-features --verbose
       - name: Check without default features
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --no-default-features --verbose
+        run: cargo test --no-default-features --verbose
 
   typos:
     name: Typos
@@ -86,10 +80,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Check the lints
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --tests --verbose -- -D warnings
+        run: cargo clippy --tests --verbose -- -D warnings
 
   rustfmt:
     name: Formatting
@@ -102,10 +93,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Check the formatting
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check --verbose
+        run: cargo fmt --all -- --check --verbose
 
   lychee:
     name: Links
