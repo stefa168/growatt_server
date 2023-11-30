@@ -101,7 +101,6 @@ jobs:
         with:
           toolchain: ${{ matrix.build.TOOLCHAIN }}
           target: ${{ matrix.build.TARGET }}
-          override: true
       - name: Build
         env:
           SQLX_OFFLINE: true
