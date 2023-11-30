@@ -100,14 +100,9 @@ jobs:
           target: ${{ matrix.build.TARGET }}
           override: true
       - name: Build
-        if: matrix.build.OS != 'windows-2022'
-        uses: dtolnay/rust-cargo@v1
         env:
           SQLX_OFFLINE: true
-        with:
-          use-cross: true
-          command: build
-          args: --release --locked --target ${{ matrix.build.TARGET }}
+        run: cargo build --release --locked --target ${{ matrix.build.TARGET }}
       - name: Prepare release assets
         shell: bash
         run: |
