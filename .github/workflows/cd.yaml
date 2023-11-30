@@ -98,8 +98,8 @@ jobs:
       - name: Prepare release assets
         shell: bash
         run: |
-          mkdir -p release/{man,completions}
-          cp {LICENSE.md,README.md,CHANGELOG.md} release/
+          mkdir -p release/
+          cp {LICENSE.md,README.md,CHANGELOG.md,inverters/,config.yaml} release/
           cp "target/${{ matrix.build.TARGET }}/release/growatt_server" release/
           mv release/ growatt_server-${{ env.RELEASE_VERSION }}/
       - name: Create release artifacts
