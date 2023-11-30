@@ -55,18 +55,18 @@ jobs:
             TOOLCHAIN: stable,
             TARGET: x86_64-unknown-linux-musl,
           }
-          - {
-            NAME: linux-x86-glibc,
-            OS: ubuntu-22.04,
-            TOOLCHAIN: stable,
-            TARGET: i686-unknown-linux-gnu,
-          }
-          - {
-            NAME: linux-x86-musl,
-            OS: ubuntu-22.04,
-            TOOLCHAIN: stable,
-            TARGET: i686-unknown-linux-musl,
-          }
+#          - {
+#            NAME: linux-x86-glibc,
+#            OS: ubuntu-22.04,
+#            TOOLCHAIN: stable,
+#            TARGET: i686-unknown-linux-gnu,
+#          }
+#          - {
+#            NAME: linux-x86-musl,
+#            OS: ubuntu-22.04,
+#            TOOLCHAIN: stable,
+#            TARGET: i686-unknown-linux-musl,
+#          }
           - {
             NAME: linux-arm64-glibc,
             OS: ubuntu-22.04,
@@ -92,6 +92,10 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y --no-install-recommends \
               --allow-unauthenticated musl-tools
+          fi 
+          if [["${{matrix.build.NAME}}" = *"arm64"*]]; then
+            sudo apt-get update
+            sudo apt-get install -y --no-instal-recommends --allow-unauthenticated aarch64-linux-gnu-gcc
           fi
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@v1
@@ -113,7 +117,7 @@ jobs:
       - name: Create release artifacts
         shell: bash
         run: |
-          tar -czvf git-cliff-${{ env.RELEASE_VERSION }}-${{ matrix.build.TARGET }}.tar.gz \
+          tar -czvf growatt_server-${{ env.RELEASE_VERSION }}-${{ matrix.build.TARGET }}.tar.gz \
             growatt_server-${{ env.RELEASE_VERSION }}/
           shasum -a 512 growatt_server-${{ env.RELEASE_VERSION }}-${{ matrix.build.TARGET }}.tar.gz \
             > growatt_server-${{ env.RELEASE_VERSION }}-${{ matrix.build.TARGET }}.tar.gz.sha512
