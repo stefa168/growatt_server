@@ -129,7 +129,7 @@ jobs:
 #            --passphrase-fd 0 --detach-sign \
 #            git-cliff-${{ env.RELEASE_VERSION }}-${{ matrix.build.TARGET }}.tar.gz
       - name: Publish to GitHub
-        if: ${{ !contains(env.RELEASE_VERSION, 'alpha') && !contains(env.RELEASE_VERSION, 'beta') && !contains(env.RELEASE_VERSION, 'rc') }}
+        if: ${{ !contains(env.RELEASE_VERSION, 'alpha') && !contains(env.RELEASE_VERSION, 'beta') && !contains(env.RELEASE_VERSION, 'rc') && !contains(env.RELEASE_VERSION, 'dev') }}
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -140,7 +140,7 @@ jobs:
           release_name: "Release v${{ env.RELEASE_VERSION }}"
           body: "${{ needs.generate-changelog.outputs.release_body }}"
       - name: Publish to GitHub (pre-release)
-        if: ${{ contains(env.RELEASE_VERSION, 'alpha') || contains(env.RELEASE_VERSION, 'beta') || contains(env.RELEASE_VERSION, 'rc') }}
+        if: ${{ contains(env.RELEASE_VERSION, 'alpha') || contains(env.RELEASE_VERSION, 'beta') || contains(env.RELEASE_VERSION, 'rc' || contains(env.RELEASE_VERSION, 'dev')) }}
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
