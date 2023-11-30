@@ -8,6 +8,7 @@ services:
     volumes:
       - ./inverters:/usr/local/bin/inverters
       - ./config.yaml:/usr/local/bin/config.yaml
+      - ./logs:/usr/local/bin/logs
     networks:
       postgres-net:
   timescale:
