@@ -93,9 +93,9 @@ jobs:
             sudo apt-get install -y --no-install-recommends \
               --allow-unauthenticated musl-tools
           fi 
-          if [["${{matrix.build.NAME}}" = *"arm64"*]]; then
-            sudo apt-get update
-            sudo apt-get install -y --no-instal-recommends --allow-unauthenticated aarch64-linux-gnu-gcc
+          if [[ "${{ matrix.build.NAME }}" == *"arm64"* ]]; then
+              sudo apt-get update
+              sudo apt-get install -y --no-install-recommends --allow-unauthenticated aarch64-linux-gnu-gcc
           fi
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@v1
