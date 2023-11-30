@@ -12,9 +12,6 @@ keywords = ["growatt", "inverter", "server", "proxy", "offline"]
 name = "growatt_server"
 path = "src/main.rs"
 
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 serde = { version = "1.0.190", features = ["derive", "std", "rc"] }
 serde_yaml = "0.9.27"
