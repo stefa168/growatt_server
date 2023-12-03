@@ -1,16 +1,22 @@
-pub fn unscramble_data(data: &[u8]) -> Vec<u8> {
+use anyhow::{anyhow};
+
+pub fn unscramble_data(data: &[u8]) -> anyhow::Result<Vec<u8>> {
     let ndecdata = data.len();
     let mask = b"Growatt";
 
     // Start the decrypt routine
-    let mut unscrambled: Vec<u8> = data[..8].to_vec(); // Isolate the unscrambled header
+    // Isolate the already unscrambled header
+    let mut unscrambled: Vec<u8> = match data.get(..8) {
+        Some(u) => u.to_vec(),
+        None => return Err(anyhow!("Data received too short: {} bytes instead of 8", data.len()))
+    };
 
     for (i, j) in (8..ndecdata).zip((0..mask.len()).cycle()) {
         let dec_byte = data[i] ^ mask[j];
         unscrambled.push(dec_byte);
     }
 
-    unscrambled
+    Ok(unscrambled)
 }
 
 pub fn hex_bytes_to_ascii(hex_bytes: &[u8]) -> String {
