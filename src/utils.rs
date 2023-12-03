@@ -1,4 +1,4 @@
-use anyhow::{anyhow};
+use anyhow::anyhow;
 
 pub fn unscramble_data(data: &[u8]) -> anyhow::Result<Vec<u8>> {
     let ndecdata = data.len();
@@ -8,7 +8,12 @@ pub fn unscramble_data(data: &[u8]) -> anyhow::Result<Vec<u8>> {
     // Isolate the already unscrambled header
     let mut unscrambled: Vec<u8> = match data.get(..8) {
         Some(u) => u.to_vec(),
-        None => return Err(anyhow!("Data received too short: {} bytes instead of 8", data.len()))
+        None => {
+            return Err(anyhow!(
+                "Data received too short: {} bytes instead of 8",
+                data.len()
+            ))
+        }
     };
 
     for (i, j) in (8..ndecdata).zip((0..mask.len()).cycle()) {

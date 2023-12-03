@@ -7,7 +7,7 @@ use futures::FutureExt;
 use serde::{Deserialize, Serialize};
 use sqlx::postgres::PgConnectOptions;
 use sqlx::PgPool;
-use std::fmt::Write;
+use std::fmt::{Debug, Write};
 use std::io;
 use std::net::SocketAddr;
 use std::str::FromStr;
@@ -19,7 +19,7 @@ use tokio::task::JoinHandle;
 use tokio::{fs, signal};
 use tokio_util::sync::CancellationToken;
 use tracing::level_filters::LevelFilter;
-use tracing::{debug, error, info, instrument};
+use tracing::{debug, error, info, instrument, span, Level};
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_panic::panic_hook;
 use tracing_subscriber::layer::SubscriberExt;
@@ -60,6 +60,10 @@ async fn main() -> Result<()> {
     // First thing: load the arguments and configuration file.
     let args = get_cli_conf().get_matches();
 
+    println!(
+        "{} starting up, looking for configuration file",
+        crate_name!()
+    );
     let config_path: &String = args.get_one("config_path").unwrap();
 
     let config = config::load_from_yaml(config_path).await.context(format!(
@@ -88,11 +92,15 @@ async fn main() -> Result<()> {
         .await
         .expect_or_log("Failed to connect to the Database");
 
+    let _guard = span!(Level::INFO, "migrations").entered();
+    info!("Running database migrations if needed...");
     let migrator = sqlx::migrate!("./migrations");
     migrator
         .run(&db_pool)
         .await
         .expect_or_log("Failed migrating the database to the latest version");
+    info!("Migrations completed successfully");
+    drop(_guard);
 
     if config.inverters_dir.is_none() {
         info!("No inverters path specified. Using default");
@@ -199,8 +207,9 @@ struct ConnectionHandler {
 }
 
 impl ConnectionHandler {
-    async fn handle_data<'a>(&self, data: &'a [u8]) -> &'a [u8] {
-        let bytes = utils::unscramble_data(data);
+    #[instrument(skip(self), name = "message_handler")]
+    async fn handle_data<'a>(&self, data: &'a [u8]) -> Result<&'a [u8]> {
+        let bytes = utils::unscramble_data(data)?;
 
         let data_length = u16::from_be_bytes(bytes[4..6].try_into().unwrap());
 
@@ -250,7 +259,7 @@ impl ConnectionHandler {
 
         if let Err(e) = r {
             error!(error=%e);
-            return data;
+            return Ok(data);
         }
 
         let id = r.unwrap().id;
@@ -268,7 +277,7 @@ impl ConnectionHandler {
             .unwrap();
         }
 
-        data
+        Ok(data)
     }
 
     async fn copy_with_abort<R, W>(
@@ -277,7 +286,7 @@ impl ConnectionHandler {
         write: &mut W,
         abort: CancellationToken,
         handle_data: bool,
-    ) -> tokio::io::Result<usize>
+    ) -> Result<usize>
     where
         R: tokio::io::AsyncRead + Unpin,
         W: tokio::io::AsyncWrite + Unpin,
@@ -285,7 +294,7 @@ impl ConnectionHandler {
         let mut bytes_forwarded = 0;
         let mut buf = [0u8; BUF_SIZE];
 
-        loop {
+        'proxy: loop {
             let bytes_read;
             tokio::select! {
                 biased;
@@ -294,17 +303,27 @@ impl ConnectionHandler {
                     bytes_read = result?;
                 },
                 _ = abort.cancelled() => {
-                    break;
+                    break 'proxy;
                 }
             }
 
             if bytes_read == 0 {
-                break;
+                break 'proxy;
             }
 
+            /*
+            Here the data is expected to be changed if it was requested to remove commands that
+            the user doesn't want.
+            */
             let bytes_to_forward = match handle_data {
                 false => &buf[..bytes_read],
-                true => self.handle_data(&buf[..bytes_read]).await,
+                true => match self.handle_data(&buf[..bytes_read]).await {
+                    Ok(d) => d,
+                    Err(e) => {
+                        error!(error=%e, "An error occurred while processing a message packet");
+                        continue 'proxy;
+                    }
+                },
             };
 
             write.write_all(bytes_to_forward).await?;
