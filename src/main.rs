@@ -133,11 +133,7 @@ async fn main() -> Result<()> {
             let addr = config.remote_address.clone();
 
             tokio::spawn(async move {
-                let handler = ConnectionHandler {
-                    inverter: i,
-                    db_pool: pool,
-                    remote_address: addr,
-                };
+                let handler = ConnectionHandler::new(i, pool, addr);
 
                 if let Err(e) = handler.handle_connection(client, client_addr).await {
                     error!(error = %e, "An error occurred while handling a connection from {}", client_addr);
@@ -207,6 +203,18 @@ struct ConnectionHandler {
 }
 
 impl ConnectionHandler {
+    pub fn new(
+        inverter: Arc<Vec<GrowattV6EnergyFragment>>,
+        db_pool: sqlx::Pool<sqlx::Postgres>,
+        remote_address: Option<String>,
+    ) -> Self {
+        ConnectionHandler {
+            inverter,
+            db_pool,
+            remote_address,
+        }
+    }
+
     #[instrument(skip(self), name = "message_handler")]
     async fn handle_data<'a>(&self, data: &'a [u8]) -> Result<&'a [u8]> {
         let bytes = utils::unscramble_data(data)?;
