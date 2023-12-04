@@ -1,5 +1,6 @@
+use crate::data::GrowattV6EnergyFragment;
 use crate::data_message::{DataMessage, MessageType};
-use crate::{utils, GrowattV6EnergyFragment, BUF_SIZE};
+use crate::{utils, BUF_SIZE};
 use anyhow::Context;
 use futures::FutureExt;
 use std::fmt::Write;

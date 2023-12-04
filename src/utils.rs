@@ -1,4 +1,5 @@
 use anyhow::{Context, Result};
+use std::fmt::Debug;
 
 pub fn unscramble_data(data: &[u8]) -> Result<Vec<u8>> {
     let ndecdata = data.len();
@@ -6,7 +7,8 @@ pub fn unscramble_data(data: &[u8]) -> Result<Vec<u8>> {
 
     // Start the decrypt routine
     // Isolate the already unscrambled header
-    let mut unscrambled: Vec<u8> = data.get(..8)
+    let mut unscrambled: Vec<u8> = data
+        .get(..8)
         .with_context(|| format!("Data received too short: {} bytes instead of 8", data.len()))?
         .to_vec();
 
@@ -40,4 +42,17 @@ fn print_bytes(bytes: &[u8], n: usize) {
             print!("{}", *byte as char);
         });
     });
+}
+
+pub trait LogError<T, E: Debug> {
+    fn log_error(self) -> Result<T, E>;
+}
+
+impl<T, E: Debug> LogError<T, E> for Result<T, E> {
+    fn log_error(self) -> Result<T, E> {
+        if let Err(ref e) = self {
+            tracing::error!("{:?}", e);
+        }
+        self
+    }
 }

@@ -1,4 +1,5 @@
-use crate::{utils, Datatype, GrowattV6EnergyFragment};
+use crate::data::{Datatype, GrowattV6EnergyFragment};
+use crate::utils;
 use anyhow::Result;
 use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};

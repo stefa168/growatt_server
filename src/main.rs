@@ -1,55 +1,34 @@
-use std::fmt::Debug;
 use std::io;
 use std::str::FromStr;
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
-use clap::{arg, ArgMatches, Command, crate_authors, crate_description, crate_name, crate_version};
-use serde::{Deserialize, Serialize};
-use sqlx::PgPool;
+use clap::{arg, crate_authors, crate_description, crate_name, crate_version, ArgMatches, Command};
+use data::GrowattV6EnergyFragment;
 use sqlx::postgres::PgConnectOptions;
-use tokio::{fs, signal};
+use sqlx::PgPool;
 use tokio::net::TcpListener;
 use tokio::signal::unix::SignalKind;
 use tokio::task::JoinHandle;
-use tracing::{error, info, instrument, Level, span};
+use tokio::{fs, signal};
 use tracing::level_filters::LevelFilter;
+use tracing::{error, info, instrument, span, Level};
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_panic::panic_hook;
-use tracing_subscriber::{EnvFilter, fmt};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
-use tracing_unwrap::ResultExt;
+use tracing_subscriber::{fmt, EnvFilter};
 
 use crate::config::Config;
+use crate::utils::LogError;
 
 mod config;
+mod data;
 mod data_message;
 mod server;
 mod utils;
 
 const BUF_SIZE: usize = 65535;
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "snake_case")]
-enum Datatype {
-    String,
-    Date,
-    #[serde(alias = "int")]
-    Integer,
-    Float,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct GrowattV6EnergyFragment {
-    name: String,
-    offset: u32,
-    #[serde(alias = "length")]
-    bytes_len: u32,
-    #[serde(alias = "type")]
-    fragment_type: Datatype,
-    fraction: Option<u32>,
-}
 
 #[tokio::main]
 #[instrument]
@@ -63,10 +42,13 @@ async fn main() -> Result<()> {
     );
     let config_path: &String = args.get_one("config_path").unwrap();
 
-    let config = config::load_from_yaml(config_path).await.context(format!(
-        "Failed to load the configuration file from {}",
-        config_path
-    ))?;
+    let config = config::load_from_yaml(config_path)
+        .await
+        .context(format!(
+            "Failed to load the configuration file from {}",
+            config_path
+        ))
+        .log_error()?;
 
     // Set up logging
     let _logger_guard = init_logging(&config)?;
@@ -74,6 +56,7 @@ async fn main() -> Result<()> {
     // Finally starting!
     info!("{} version {} started.", crate_name!(), crate_version!());
 
+    // Database
     let db_opts = PgConnectOptions::new()
         .username(&config.database.username)
         .password(&config.database.password)
@@ -87,7 +70,8 @@ async fn main() -> Result<()> {
     );
     let db_pool = PgPool::connect_with(db_opts)
         .await
-        .expect_or_log("Failed to connect to the Database");
+        .context("Failed to connect to the Database")
+        .log_error()?;
 
     // Database migration
     let _guard = span!(Level::INFO, "migrations").entered();
@@ -96,7 +80,8 @@ async fn main() -> Result<()> {
     migrator
         .run(&db_pool)
         .await
-        .expect_or_log("Failed migrating the database to the latest version");
+        .context("Failed migrating the database to the latest version")
+        .log_error()?;
     info!("Migrations completed successfully");
     drop(_guard);
 
@@ -109,30 +94,20 @@ async fn main() -> Result<()> {
             .inverters_dir
             .unwrap_or("./inverters/Growatt v6.json".to_string()),
     )
-        .await
-        .context("Could not load inverters definitions");
-    let json = match json {
-        Ok(j) => j,
-        Err(e) => {
-            return Ok(());
-        }
-    };
+    .await
+    .context("Could not load inverters definitions")
+    .log_error()?;
 
-    let inverter: Vec<GrowattV6EnergyFragment> = match serde_json::from_str(&json) {
-        Ok(j) => j,
-        Err(e) => {
-            error!(error=%&e, "Error deserializing inverters specifications");
-            return Err(anyhow::anyhow!(e));
-        }
-    };
-    let inverter = Arc::new(inverter);
+    let inverter: Arc<Vec<GrowattV6EnergyFragment>> =
+        Arc::new(serde_json::from_str(&json).log_error()?);
 
     // Socket opening
     // https://github.com/mqudsi/tcpproxy/blob/master/src/main.rs
     let listen_port = config.listen_port.unwrap_or(5279);
     let listener = TcpListener::bind(format!("{}:{:?}", "0.0.0.0", listen_port))
         .await
-        .expect_or_log(format!("Failed to open port {:?}", listen_port).as_str());
+        .with_context(|| format!("Failed to open port {:?}", listen_port))
+        .log_error()?;
 
     info!(
         "Started listening for incoming connections on port {:?}",
@@ -188,7 +163,7 @@ fn init_logging(config: &Config) -> Result<WorkerGuard> {
             .and_then(|logging| logging.level.clone())
             .unwrap_or("info".to_string()),
     )
-        .unwrap();
+    .unwrap();
 
     let console_logging_filter = EnvFilter::builder()
         .with_default_directive(base_logging.into())
