@@ -1,20 +1,14 @@
-use anyhow::anyhow;
+use anyhow::{Context, Result};
 
-pub fn unscramble_data(data: &[u8]) -> anyhow::Result<Vec<u8>> {
+pub fn unscramble_data(data: &[u8]) -> Result<Vec<u8>> {
     let ndecdata = data.len();
     let mask = b"Growatt";
 
     // Start the decrypt routine
     // Isolate the already unscrambled header
-    let mut unscrambled: Vec<u8> = match data.get(..8) {
-        Some(u) => u.to_vec(),
-        None => {
-            return Err(anyhow!(
-                "Data received too short: {} bytes instead of 8",
-                data.len()
-            ))
-        }
-    };
+    let mut unscrambled: Vec<u8> = data.get(..8)
+        .with_context(|| format!("Data received too short: {} bytes instead of 8", data.len()))?
+        .to_vec();
 
     for (i, j) in (8..ndecdata).zip((0..mask.len()).cycle()) {
         let dec_byte = data[i] ^ mask[j];
