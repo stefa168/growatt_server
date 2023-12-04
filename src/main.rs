@@ -195,12 +195,18 @@ fn init_logging(config: &Config) -> Result<WorkerGuard> {
         .with_env_var("LOG_LEVEL")
         .from_env_lossy();
 
-    let file_appender = tracing_appender::rolling::daily(
-        options
-            .and_then(|l| l.directory.clone())
-            .unwrap_or("./logs".to_string()),
-        "growatt_server",
-    );
+    // this can fail, todo
+    let file_appender = tracing_appender::rolling::RollingFileAppender::builder()
+        .rotation(tracing_appender::rolling::Rotation::HOURLY)
+        .filename_prefix("growatt_server")
+        .filename_suffix("log")
+        .build(
+            options
+                .and_then(|l| l.directory.clone())
+                .unwrap_or("./logs".to_string()),
+        )
+        .context("Initializing rolling file appender failed")?;
+
     let (non_blocking, guard) = tracing_appender::non_blocking(file_appender);
 
     tracing_subscriber::registry()
