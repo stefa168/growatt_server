@@ -42,19 +42,35 @@ async fn main() -> Result<()> {
     );
     let config_path: &String = args.get_one("config_path").unwrap();
 
-    let config = config::load_from_yaml(config_path)
-        .await
-        .context(format!(
-            "Failed to load the configuration file from {}",
-            config_path
-        ))
-        .log_error()?;
+    let config = log_error!(config::load_from_yaml(config_path).await.context(format!(
+        "Failed to load the configuration file from {}",
+        config_path
+    )))?;
 
     // Set up logging
     let _logger_guard = init_logging(&config)?;
 
     // Finally starting!
     info!("{} version {} started.", crate_name!(), crate_version!());
+
+    // Inverter specifications loading
+    if config.inverters_dir.is_none() {
+        info!("No inverters path specified. Using default");
+    }
+    let json = log_error!(fs::read_to_string(
+        config
+            .inverters_dir
+            .unwrap_or("./inverters/Growatt v6.json".to_string()),
+    )
+    .await
+    .context("Could not load inverters definitions"))?;
+
+    let inverter: Arc<Vec<GrowattV6EnergyFragment>> =
+        Arc::new(log_error!(serde_json::from_str(&json))?);
+
+    if let Some((_subcommand_name, args)) = args.subcommand() {
+        return Ok(log_error!(subcommand_decrypt(args, inverter).await)?);
+    }
 
     // Database
     let db_opts = PgConnectOptions::new()
@@ -68,46 +84,29 @@ async fn main() -> Result<()> {
         "Connecting to database at {}:{}",
         &config.database.host, &config.database.port
     );
-    let db_pool = PgPool::connect_with(db_opts)
+    let db_pool = log_error!(PgPool::connect_with(db_opts)
         .await
-        .context("Failed to connect to the Database")
-        .log_error()?;
+        .context("Failed to connect to the Database"))?;
 
     // Database migration
     let _guard = span!(Level::INFO, "migrations").entered();
     info!("Running database migrations if needed...");
     let migrator = sqlx::migrate!("./migrations");
-    migrator
+    log_error!(migrator
         .run(&db_pool)
         .await
-        .context("Failed migrating the database to the latest version")
-        .log_error()?;
+        .context("Failed migrating the database to the latest version"))?;
     info!("Migrations completed successfully");
     drop(_guard);
-
-    // Inverter specifications loading
-    if config.inverters_dir.is_none() {
-        info!("No inverters path specified. Using default");
-    }
-    let json = fs::read_to_string(
-        config
-            .inverters_dir
-            .unwrap_or("./inverters/Growatt v6.json".to_string()),
-    )
-    .await
-    .context("Could not load inverters definitions")
-    .log_error()?;
-
-    let inverter: Arc<Vec<GrowattV6EnergyFragment>> =
-        Arc::new(serde_json::from_str(&json).log_error()?);
 
     // Socket opening
     // https://github.com/mqudsi/tcpproxy/blob/master/src/main.rs
     let listen_port = config.listen_port.unwrap_or(5279);
-    let listener = TcpListener::bind(format!("{}:{:?}", "0.0.0.0", listen_port))
-        .await
-        .with_context(|| format!("Failed to open port {:?}", listen_port))
-        .log_error()?;
+    let listener = log_error!(
+        TcpListener::bind(format!("{}:{:?}", "0.0.0.0", listen_port))
+            .await
+            .with_context(|| format!("Failed to open port {:?}", listen_port))
+    )?;
 
     info!(
         "Started listening for incoming connections on port {:?}",

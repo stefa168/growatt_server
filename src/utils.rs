@@ -1,5 +1,4 @@
 use anyhow::{Context, Result};
-use std::fmt::Debug;
 
 pub fn unscramble_data(data: &[u8]) -> Result<Vec<u8>> {
     let ndecdata = data.len();
@@ -44,15 +43,14 @@ fn print_bytes(bytes: &[u8], n: usize) {
     });
 }
 
-pub trait LogError<T, E: Debug> {
-    fn log_error(self) -> Result<T, E>;
-}
-
-impl<T, E: Debug> LogError<T, E> for Result<T, E> {
-    fn log_error(self) -> Result<T, E> {
-        if let Err(ref e) = self {
-            tracing::error!("{:?}", e);
+macro_rules! log_error {
+    ($expr:expr) => {
+        match $expr {
+            Ok(val) => Ok(val),
+            Err(err) => {
+                tracing::error!("{:?}", err);
+                Err(err)
+            }
         }
-        self
-    }
+    };
 }

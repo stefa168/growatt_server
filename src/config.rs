@@ -1,3 +1,4 @@
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use tokio::fs;
 
@@ -26,7 +27,7 @@ pub struct DbConfig {
     pub database: String,
 }
 
-pub async fn load_from_yaml(path: &str) -> anyhow::Result<Config> {
+pub async fn load_from_yaml(path: &str) -> Result<Config> {
     let yaml = fs::read_to_string(path).await?;
     let config = serde_yaml::from_str(&yaml)?;
     Ok(config)
