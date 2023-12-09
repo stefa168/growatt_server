@@ -1,14 +1,15 @@
-use crate::data::{Datatype, GrowattV6EnergyFragment};
+use crate::data::v6::message_type::MessageType;
+use crate::data::v6::GrowattV6EnergyFragment;
+use crate::data::Datatype;
 use crate::utils;
 use anyhow::Result;
 use chrono::{DateTime, Local};
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::f32;
+use std::fmt::{Debug, Display, Write};
 use std::sync::Arc;
 use tracing::debug;
 
-#[derive(Debug)]
 pub struct DataMessage {
     pub raw: Vec<u8>,
     pub header: Vec<u8>,
@@ -16,6 +17,41 @@ pub struct DataMessage {
     pub data: HashMap<String, String>,
     pub time: DateTime<Local>,
     pub serial_number: Option<String>,
+}
+
+fn _mark_usage(tracker: &mut HashMap<u32, String>, fragment: &GrowattV6EnergyFragment) {
+    for i in 0..fragment.bytes_len {
+        tracker.insert(fragment.offset + i, fragment.name.clone());
+    }
+}
+
+fn _display_sequence(byte_sequence: &[u8], tracker: &HashMap<u32, String>) {
+    let mut last_fragment = String::new();
+
+    for (i, &byte) in byte_sequence.iter().enumerate() {
+        match tracker.get(&(i as u32)) {
+            Some(fragment_name) => {
+                if fragment_name != &last_fragment {
+                    if !last_fragment.is_empty() {
+                        println!(); // Add an extra newline for separation
+                    }
+                    println!("\n{}", fragment_name);
+                    last_fragment = fragment_name.clone();
+                }
+                print!("{:02x} ", byte);
+            },
+            None => {
+                // This is a byte that does not belong to any fragment
+                if !last_fragment.is_empty() {
+                    println!("\nUNASSIGNED");
+                    last_fragment.clear();
+                }
+                print!("{:02x} ", byte);
+            }
+        }
+    }
+
+    println!("\n");
 }
 
 impl DataMessage {
@@ -32,6 +68,8 @@ impl DataMessage {
 
         let time = Local::now();
         let mut serial_number: Option<String> = None;
+
+        // let mut tracker = HashMap::new();
 
         for fragment in inverter_fragments.iter() {
             let base_offset = fragment.offset as usize;
@@ -112,8 +150,12 @@ impl DataMessage {
                 }
             };
 
+            //mark_usage(&mut tracker, fragment);
+
             data.insert(fragment.name.clone(), string_value);
         }
+
+        // display_sequence(&bytes, &tracker);
 
         Ok(Self {
             raw: bytes.into(),
@@ -142,12 +184,39 @@ impl DataMessage {
     }
 }
 
-#[derive(Debug, sqlx::Type, Serialize, Deserialize)]
-pub enum MessageType {
-    Data3,
-    Data4,
-    Ping,
-    Configure,
-    Identify,
-    Unknown,
+impl Display for DataMessage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut output = String::new();
+
+        writeln!(output, "Data Message:")?;
+        writeln!(output, "  Type: {}", self.data_type)?;
+        writeln!(output, "  Time: {}", self.time)?;
+        writeln!(output, "  Serial Number: {:?}", self.serial_number)?;
+        writeln!(output, "  Data:")?;
+
+        for (key, value) in self.data.iter() {
+            writeln!(output, "    {}: {}", key, value)?;
+        }
+
+        write!(f, "{}", output)
+    }
+}
+
+impl Debug for DataMessage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut output = String::new();
+
+        writeln!(output, "Data Message:")?;
+        writeln!(output, "  Raw: {:?}", self.raw)?;
+        writeln!(output, "  Type: {}", self.data_type)?;
+        writeln!(output, "  Time: {}", self.time)?;
+        writeln!(output, "  Serial Number: {:?}", self.serial_number)?;
+        writeln!(output, "  Data:")?;
+
+        for (key, value) in self.data.iter() {
+            writeln!(output, "    {}: {}", key, value)?;
+        }
+
+        write!(f, "{}", output)
+    }
 }

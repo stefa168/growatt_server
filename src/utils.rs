@@ -1,8 +1,8 @@
 use anyhow::{Context, Result};
 
-pub fn unscramble_data(data: &[u8]) -> Result<Vec<u8>> {
+pub fn unscramble_data(data: &[u8], mask: Option<&str>) -> Result<Vec<u8>> {
     let ndecdata = data.len();
-    let mask = b"Growatt";
+    let mask: &[u8] = mask.unwrap_or("Growatt").as_bytes();
 
     // Start the decrypt routine
     // Isolate the already unscrambled header
@@ -21,6 +21,16 @@ pub fn unscramble_data(data: &[u8]) -> Result<Vec<u8>> {
 
 pub fn hex_bytes_to_ascii(hex_bytes: &[u8]) -> String {
     hex_bytes.iter().map(|b| *b as char).collect()
+}
+
+pub fn hex_to_bytes(hex: &str) -> Vec<u8> {
+    hex.as_bytes()
+        .chunks(2)
+        .map(|chunk| {
+            let s = std::str::from_utf8(chunk).unwrap();
+            u8::from_str_radix(s, 16).unwrap()
+        })
+        .collect()
 }
 
 #[allow(dead_code)]

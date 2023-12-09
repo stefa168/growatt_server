@@ -1,3 +1,5 @@
+pub mod v6;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -8,15 +10,4 @@ pub enum Datatype {
     #[serde(alias = "int")]
     Integer,
     Float,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct GrowattV6EnergyFragment {
-    pub name: String,
-    pub offset: u32,
-    #[serde(alias = "length")]
-    pub bytes_len: u32,
-    #[serde(alias = "type")]
-    pub fragment_type: Datatype,
-    pub fraction: Option<u32>,
 }

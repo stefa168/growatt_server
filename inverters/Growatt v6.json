@@ -240,28 +240,13 @@
     "unit": "W"
   },
   {
-    "name": "Total Online Time",
-    "offset": 135,
-    "length": 4,
-    "type": "float",
-    "fraction": 1,
-    "unit": "s"
-  },
-  {
     "name": "eactoday",
     "offset": 177,
     "length": 4,
     "type": "float",
     "fraction": 10,
-    "unit": "kWh"
-  },
-  {
-    "name": "pvenergytoday",
-    "offset": 177,
-    "length": 4,
-    "type": "float",
-    "fraction": 10,
-    "unit": "kWh"
+    "unit": "kWh",
+    "comment": "Probably the System production (PV?)"
   },
   {
     "name": "eactotal",
@@ -270,6 +255,14 @@
     "type": "float",
     "fraction": 10,
     "unit": "kWh"
+  },
+  {
+    "name": "Total Online Time",
+    "offset": 185,
+    "length": 4,
+    "type": "float",
+    "fraction": 2,
+    "unit": "s"
   },
   {
     "name": "epvtotal",
@@ -359,6 +352,7 @@
     "fraction": 10,
     "unit": "kWh"
   },
+
   {
     "name": "pvtemperature",
     "offset": 257,
@@ -389,7 +383,7 @@
     "length": 2,
     "type": "float",
     "fraction": 10,
-    "unit_missing": true
+    "unit": "V"
   },
   {
     "name": "pbusvolt",
@@ -405,7 +399,6 @@
     "length": 2,
     "type": "float",
     "fraction": 10
-    
   },
   {
     "name": "#ipf",
@@ -413,7 +406,6 @@
     "length": 2,
     "type": "float",
     "fraction": 10
-    
   },
   {
     "name": "#realoppercent",
@@ -421,7 +413,6 @@
     "length": 2,
     "type": "float",
     "fraction": 100
-    
   },
   {
     "name": "#opfullwatt",
@@ -429,7 +420,6 @@
     "length": 4,
     "type": "float",
     "fraction": 10
-    
   },
   {
     "name": "#deratingmode",
@@ -437,7 +427,36 @@
     "length": 2,
     "type": "float",
     "fraction": 1
-    
+  },
+  {
+    "name": "#faultcode",
+    "offset": 281,
+    "length": 4,
+    "type": "int"
+  },
+  {
+    "name": "#remotectrlen",
+    "offset": 285,
+    "length": 2,
+    "type": "int"
+  },
+  {
+    "name": "#remotectrlpwr",
+    "offset": 287,
+    "length": 2,
+    "type": "int"
+  },
+  {
+    "name": "#warning",
+    "offset": 289,
+    "length": 4,
+    "type": "int"
+  },
+  {
+    "name": "#binwarn",
+    "offset": 193,
+    "length": 2,
+    "type": "int"
   },
   {
     "name": "eacharge_today",
@@ -528,14 +547,16 @@
     "offset": 343,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "comment": "Probably POWER DISCHARGE, for the battery"
   },
   {
     "name": "p1charge1",
     "offset": 347,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "comment": "Probably Power Charge, for the battery"
   },
   {
     "name": "vbat",
@@ -558,53 +579,56 @@
     "offset": 355,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "comment": "No value reported"
   },
   {
     "name": "#pactousers",
     "offset": 359,
     "length": 4,
     "type": "float",
-    "fraction": 10
-    
+    "fraction": 10,
+    "comment": "No value reported"
   },
   {
     "name": "#pactousert",
     "offset": 363,
     "length": 4,
     "type": "float",
-    "fraction": 10
-    
+    "fraction": 10,
+    "comment": "No value reported"
   },
   {
     "name": "pactousertot",
     "offset": 367,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "comment": "No value reported"
   },
   {
     "name": "pactogridr",
     "offset": 371,
     "length": 4,
     "type": "float",
-    "fraction": 10
+    "fraction": 10,
+    "comment": "No value reported"
   },
   {
     "name": "#pactogrids",
     "offset": 375,
     "length": 4,
     "type": "float",
-    "fraction": 10
-    
+    "fraction": 10,
+    "comment": "absurdly large numbers reported"
   },
   {
     "name": "#pactogridt",
     "offset": 379,
     "length": 4,
     "type": "float",
-    "fraction": 10
-    
+    "fraction": 10,
+    "comment": "absurdly large numbers reported"
   },
   {
     "name": "pactogridtot",
@@ -626,7 +650,6 @@
     "length": 4,
     "type": "float",
     "fraction": 10
-    
   },
   {
     "name": "#plocaloadt",
@@ -634,7 +657,6 @@
     "length": 4,
     "type": "float",
     "fraction": 10
-    
   },
   {
     "name": "plocaloadtot",
@@ -649,7 +671,6 @@
     "length": 2,
     "type": "float",
     "fraction": 10
-    
   },
   {
     "name": "#battemp",
@@ -658,7 +679,6 @@
     "type": "float",
     "fraction": 10,
     "unit": "°C"
-    
   },
   {
     "name": "spdspstatus",

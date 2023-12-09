@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Decrypt" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="run --package growatt_server --bin growatt_server -- decrypt -f ./file" />
+    <option name="command" value="run --package growatt_server --bin growatt_server -- decrypt -f ./messages.json" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <option name="emulateTerminal" value="true" />
     <option name="channel" value="DEFAULT" />

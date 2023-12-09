@@ -10,3 +10,4 @@ COPY --from=builder /usr/local/cargo/bin/growatt_server /usr/local/bin/growatt_s
 EXPOSE 5279/tcp
 STOPSIGNAL SIGTERM
 ENTRYPOINT ["./growatt_server"]
+CMD ["start"]

@@ -1,5 +1,6 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use tokio::fs;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -27,8 +28,8 @@ pub struct DbConfig {
     pub database: String,
 }
 
-pub async fn load_from_yaml(path: &str) -> Result<Config> {
+pub async fn load_from_yaml(path: &str) -> Result<Arc<Config>> {
     let yaml = fs::read_to_string(path).await?;
     let config = serde_yaml::from_str(&yaml)?;
-    Ok(config)
+    Ok(Arc::new(config))
 }
