@@ -15,7 +15,9 @@ pub struct Config {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Logging {
+    #[serde(alias = "log_level")]
     pub level: Option<String>,
+    #[serde(alias = "log_directory")]
     pub directory: Option<String>,
 }
 
