@@ -1,9 +1,8 @@
 use std::str::FromStr;
 use std::sync::Arc;
 
-use anyhow::{bail, Context, Result};
-use clap::{arg, crate_authors, crate_description, crate_name, crate_version, Command};
-use data::v6::GrowattV6EnergyFragment;
+use anyhow::{Context, Result};
+use clap::{crate_name, crate_version, Parser};
 use tokio::fs;
 use tracing::level_filters::LevelFilter;
 use tracing::{info, instrument};
@@ -12,6 +11,8 @@ use tracing_panic::panic_hook;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::{fmt, EnvFilter};
+
+use data::v6::GrowattV6EnergyFragment;
 
 use crate::config::Config;
 use crate::misc::run_decrypt;
@@ -31,13 +32,13 @@ const BUF_SIZE: usize = 65535;
 #[instrument]
 async fn main() -> Result<()> {
     // First thing: load the arguments and configuration file.
-    let args = get_cli_conf().get_matches();
+    let cli = Cli::parse();
 
     println!(
         "{} starting up, looking for configuration file",
         crate_name!()
     );
-    let config_path: &String = args.get_one("config_path").unwrap();
+    let config_path: &str = cli.config_path.as_str();
 
     let config = log_error!(config::load_from_yaml(config_path).await.context(format!(
         "Failed to load the configuration file from {}",
@@ -69,13 +70,12 @@ async fn main() -> Result<()> {
     let inverter: Arc<Vec<GrowattV6EnergyFragment>> =
         Arc::new(log_error!(serde_json::from_str(&json))?);
 
-    let (subcommand_name, more_args) = args.subcommand().unwrap();
+    let res = match cli.subcommand {
+        Commands::Start => run_server(config, inverter).await,
+        Commands::Decrypt { file_path } => run_decrypt(file_path, config, inverter).await,
+    };
 
-    log_error!(match subcommand_name {
-        "start" => run_server(config, inverter).await,
-        "decrypt" => run_decrypt(more_args, config, inverter).await,
-        _ => bail!("Unknown subcommand. (How did we arrive here?)"),
-    })
+    log_error!(res)
 }
 
 fn init_logging(config: &Config) -> Result<WorkerGuard> {
@@ -119,25 +119,31 @@ fn init_logging(config: &Config) -> Result<WorkerGuard> {
     Ok(guard)
 }
 
-fn get_cli_conf() -> Command {
-    Command::new(crate_name!())
-        .version(crate_version!())
-        .author(crate_authors!("\n"))
-        .about(crate_description!())
-        .subcommand_required(true)
-        .arg(
-            arg!(config_path: -c --config_path <PATH> "Path to configuration file")
-                .help("Path to the config file to use to run the server")
-                .default_value("./config.yaml"),
-        )
-        .subcommand(Command::new("start").about("Starts the server"))
-        .subcommand(
-            Command::new("decrypt")
-                .about("Decrypt one or more messages. Won't start the server")
-                .arg(
-                    arg!(file: -f --file <PATH> "Path to file with the messages to decrypt")
-                        .required(true)
-                        .default_value("./messages.json"),
-                ),
-        )
+#[derive(clap::Parser)]
+#[clap(
+    name = "growatt_server",
+    version,
+    author,
+    about,
+    subcommand_required = true
+)]
+struct Cli {
+    /// Path to the config file to use to run the server
+    #[clap(short, long, default_value = "./config.yaml")]
+    config_path: String,
+
+    #[clap(subcommand)]
+    subcommand: Commands,
+}
+
+#[derive(clap::Subcommand)]
+enum Commands {
+    /// Starts the server
+    Start,
+    /// Decrypt one or more messages. Won't start the server
+    Decrypt {
+        /// Path to the file containing the messages to decrypt
+        #[clap(short, long, default_value = "./messages.json")]
+        file_path: String,
+    },
 }

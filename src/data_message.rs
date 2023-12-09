@@ -39,7 +39,7 @@ fn _display_sequence(byte_sequence: &[u8], tracker: &HashMap<u32, String>) {
                     last_fragment = fragment_name.clone();
                 }
                 print!("{:02x} ", byte);
-            },
+            }
             None => {
                 // This is a byte that does not belong to any fragment
                 if !last_fragment.is_empty() {

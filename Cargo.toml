@@ -21,7 +21,7 @@ tokio-util = "0.7.10"
 futures = "0.3.29"
 bytes = "1.5.0"
 chrono = "0.4.31"
-clap = { version = "4.4.8", features = ["color", "cargo"] }
+clap = { version = "4.4.8", features = ["color", "cargo", "derive"] }
 anyhow = { version = "1.0.75", features = ["backtrace"] }
 
 # Logging dependencies

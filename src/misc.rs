@@ -5,11 +5,10 @@ use crate::data_message::DataMessage;
 use crate::utils;
 use crate::utils::hex_to_bytes;
 use anyhow::Context;
-use clap::ArgMatches;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::fs;
-use tracing::{debug, info};
+use tracing::info;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct DecMessage {
@@ -22,19 +21,17 @@ struct DecMessage {
 /// In particular, this one allows the user to decrypt a series of messages from a specified file.
 ///
 pub(crate) async fn run_decrypt(
-    args: &ArgMatches,
+    file_path: String,
     _config: Arc<Config>,
     inverter: Arc<Vec<GrowattV6EnergyFragment>>,
 ) -> anyhow::Result<()> {
-    let file_path: &String = args.get_one("file").unwrap();
-
     async fn load_from_json(path: &str) -> anyhow::Result<Vec<DecMessage>> {
         let json = fs::read_to_string(path).await?;
         let config = serde_json::from_str(&json)?;
         Ok(config)
     }
 
-    let messages = load_from_json(file_path)
+    let messages = load_from_json(file_path.as_str())
         .await
         .context("Could not load messages")?;
 
