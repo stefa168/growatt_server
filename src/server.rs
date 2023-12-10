@@ -4,6 +4,7 @@ use crate::data::v6::GrowattV6EnergyFragment;
 use crate::data_message::DataMessage;
 use crate::{utils, BUF_SIZE};
 use anyhow::Context;
+use chrono::Local;
 use futures::FutureExt;
 use sqlx::postgres::PgConnectOptions;
 use sqlx::PgPool;
@@ -40,8 +41,8 @@ impl Server {
         }
     }
 
-    #[instrument(skip(self), name = "message_handler")]
-    async fn handle_data<'a>(&self, data: &'a [u8]) -> anyhow::Result<&'a [u8]> {
+    #[instrument(skip(self), name = "inverter_data_handler")]
+    async fn handle_inverter_data<'a>(&self, data: &'a [u8]) -> anyhow::Result<&'a [u8]> {
         let bytes = utils::unscramble_data(data, None)?;
 
         let data_length = u16::from_be_bytes(bytes[4..6].try_into().unwrap());
@@ -49,7 +50,7 @@ impl Server {
         let message_type: MessageType = bytes[7].into();
 
         info!(
-            "New {} message received, {} bytes long.",
+            "New {} message received from inverters, {} bytes long.",
             message_type, data_length
         );
         debug!(
@@ -95,10 +96,41 @@ impl Server {
                 key,
                 value
             )
+                .execute(&self.db_pool)
+                .await
+                .unwrap();
+        }
+
+        Ok(data)
+    }
+
+    #[instrument(skip(self), name = "remote_data_handler")]
+    async fn handle_remote_data<'a>(&self, data: &'a [u8]) -> anyhow::Result<&'a [u8]> {
+        let bytes = utils::unscramble_data(data, None)?;
+        let data_length = bytes.len();
+
+        let time = Local::now();
+
+        sqlx::query!(
+            "INSERT INTO remote_messages (raw, time) VALUES ($1, $2)",
+            bytes,
+            time
+        )
             .execute(&self.db_pool)
             .await
             .unwrap();
-        }
+
+        info!(
+            "New message received from remote, {} bytes long.",
+            data_length
+        );
+        debug!(
+            "Message data: {}",
+            bytes.iter().fold(String::new(), |mut output, b| {
+                write!(output, "{:02x}", b).unwrap();
+                output
+            })
+        );
 
         Ok(data)
     }
@@ -110,9 +142,9 @@ impl Server {
         abort: CancellationToken,
         handle_data: bool,
     ) -> anyhow::Result<usize>
-    where
-        R: tokio::io::AsyncRead + Unpin,
-        W: tokio::io::AsyncWrite + Unpin,
+        where
+            R: tokio::io::AsyncRead + Unpin,
+            W: tokio::io::AsyncWrite + Unpin,
     {
         let mut bytes_forwarded = 0;
         let mut buf = [0u8; BUF_SIZE];
@@ -138,15 +170,17 @@ impl Server {
             Here the data is expected to be changed if it was requested to remove commands that
             the user doesn't want.
             */
-            let bytes_to_forward = match handle_data {
-                false => &buf[..bytes_read],
-                true => match self.handle_data(&buf[..bytes_read]).await {
-                    Ok(d) => d,
-                    Err(e) => {
-                        error!(error=%e, "An error occurred while processing a message packet");
-                        continue 'proxy;
-                    }
-                },
+            let handling_result = match handle_data {
+                false => self.handle_remote_data(&buf[..bytes_read]).await,
+                true => self.handle_inverter_data(&buf[..bytes_read]).await
+            };
+
+            let bytes_to_forward = match handling_result {
+                Ok(d) => d,
+                Err(e) => {
+                    error!(error=%e, "An error occurred while processing a remote response packet");
+                    continue 'proxy;
+                }
             };
 
             write.write_all(bytes_to_forward).await?;
@@ -168,8 +202,8 @@ impl Server {
                 .as_ref()
                 .unwrap_or(&"server.growatt.com:5279".to_string()),
         )
-        .await
-        .context("Error establishing remote connection")?;
+            .await
+            .context("Error establishing remote connection")?;
 
         let (mut client_read, mut client_write) = client_stream.split();
         let (mut remote_read, mut remote_write) = remote_server.split();

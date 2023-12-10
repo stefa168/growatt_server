@@ -92,10 +92,6 @@ impl DataMessage {
                     s
                 }
                 Datatype::Date => {
-                    debug!(
-                        "Got date type with value: {}/{}/{} {}:{}:{}",
-                        slice[0], slice[1], slice[2], slice[3], slice[4], slice[5]
-                    );
                     let year = 2000 + <i32>::from(slice[0]);
                     let month = slice[1].into();
                     let day = slice[2].into();
@@ -151,6 +147,11 @@ impl DataMessage {
             };
 
             //mark_usage(&mut tracker, fragment);
+
+            debug!(
+                "{:20} {:4} {:4} {}",
+                fragment.name, fragment.offset, fragment.bytes_len, string_value
+            );
 
             data.insert(fragment.name.clone(), string_value);
         }

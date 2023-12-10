@@ -11,7 +11,6 @@ pub enum MessageType {
     Unknown,
 }
 
-// implement from for MessageTyoe
 impl From<u8> for MessageType {
     fn from(byte: u8) -> Self {
         match byte {
