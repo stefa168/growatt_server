@@ -5,7 +5,7 @@ use anyhow::{Context, Result};
 use clap::{crate_name, crate_version, Parser};
 use tokio::fs;
 use tracing::level_filters::LevelFilter;
-use tracing::{info, instrument, warn};
+use tracing::{info, instrument};
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_panic::panic_hook;
 use tracing_subscriber::layer::SubscriberExt;
@@ -91,8 +91,8 @@ fn init_logging(cli: &Cli, config: &Arc<Config>) -> Result<WorkerGuard> {
             file_level
         } else {
             // If the level is invalid, use INFO as the default level
-            warn!(
-                "Invalid logging level specified in the config file: {}. Using INFO instead",
+            eprintln!(
+                "WARNING: Invalid logging level specified in the config file: {}. Using INFO instead",
                 level
             );
             LevelFilter::INFO
