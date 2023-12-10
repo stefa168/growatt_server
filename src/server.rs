@@ -96,9 +96,9 @@ impl Server {
                 key,
                 value
             )
-                .execute(&self.db_pool)
-                .await
-                .unwrap();
+            .execute(&self.db_pool)
+            .await
+            .unwrap();
         }
 
         Ok(data)
@@ -116,9 +116,9 @@ impl Server {
             bytes,
             time
         )
-            .execute(&self.db_pool)
-            .await
-            .unwrap();
+        .execute(&self.db_pool)
+        .await
+        .unwrap();
 
         info!(
             "New message received from remote, {} bytes long.",
@@ -142,9 +142,9 @@ impl Server {
         abort: CancellationToken,
         handle_data: bool,
     ) -> anyhow::Result<usize>
-        where
-            R: tokio::io::AsyncRead + Unpin,
-            W: tokio::io::AsyncWrite + Unpin,
+    where
+        R: tokio::io::AsyncRead + Unpin,
+        W: tokio::io::AsyncWrite + Unpin,
     {
         let mut bytes_forwarded = 0;
         let mut buf = [0u8; BUF_SIZE];
@@ -172,7 +172,7 @@ impl Server {
             */
             let handling_result = match handle_data {
                 false => self.handle_remote_data(&buf[..bytes_read]).await,
-                true => self.handle_inverter_data(&buf[..bytes_read]).await
+                true => self.handle_inverter_data(&buf[..bytes_read]).await,
             };
 
             let bytes_to_forward = match handling_result {
@@ -202,8 +202,8 @@ impl Server {
                 .as_ref()
                 .unwrap_or(&"server.growatt.com:5279".to_string()),
         )
-            .await
-            .context("Error establishing remote connection")?;
+        .await
+        .context("Error establishing remote connection")?;
 
         let (mut client_read, mut client_write) = client_stream.split();
         let (mut remote_read, mut remote_write) = remote_server.split();
