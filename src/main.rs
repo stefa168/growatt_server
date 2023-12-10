@@ -5,7 +5,7 @@ use anyhow::{Context, Result};
 use clap::{crate_name, crate_version, Parser};
 use tokio::fs;
 use tracing::level_filters::LevelFilter;
-use tracing::{info, instrument};
+use tracing::{info, instrument, warn};
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_panic::panic_hook;
 use tracing_subscriber::layer::SubscriberExt;
@@ -46,7 +46,7 @@ async fn main() -> Result<()> {
     )))?;
 
     // Set up logging
-    let _logger_guard = init_logging(&config)?;
+    let _logger_guard = init_logging(&cli, &config)?;
 
     // Finally starting!
     info!("{} version {} started.", crate_name!(), crate_version!());
@@ -78,15 +78,29 @@ async fn main() -> Result<()> {
     log_error!(res)
 }
 
-fn init_logging(config: &Config) -> Result<WorkerGuard> {
-    let options = config.logging.as_ref();
+fn init_logging(cli: &Cli, config: &Arc<Config>) -> Result<WorkerGuard> {
+    let logging_options = config.logging.as_ref();
 
-    let base_logging = LevelFilter::from_str(
-        &options
-            .and_then(|logging| logging.level.clone())
-            .unwrap_or("info".to_string()),
-    )
-    .unwrap();
+    let base_logging = if let Some(level) = &cli.logging_level {
+        // If the CLI overrides the logging level, use the specified level
+        level.clone().into()
+    } else if let Some(level) = logging_options.as_ref().and_then(|l| l.level.as_ref()) {
+        // If a logging level is specified in the config file, use that
+        let file_level = LevelFilter::from_str(level);
+        if let Ok(file_level) = file_level {
+            file_level
+        } else {
+            // If the level is invalid, use INFO as the default level
+            warn!(
+                "Invalid logging level specified in the config file: {}. Using INFO instead",
+                level
+            );
+            LevelFilter::INFO
+        }
+    } else {
+        // Otherwise use INFO as the default level
+        LevelFilter::INFO
+    };
 
     let console_logging_filter = EnvFilter::builder()
         .with_default_directive(base_logging.into())
@@ -99,7 +113,7 @@ fn init_logging(config: &Config) -> Result<WorkerGuard> {
         .filename_prefix("growatt_server")
         .filename_suffix("log")
         .build(
-            options
+            logging_options
                 .and_then(|l| l.directory.clone())
                 .unwrap_or("./logs".to_string()),
         )
@@ -132,6 +146,10 @@ struct Cli {
     #[clap(short, long, default_value = "./config.yaml")]
     config_path: String,
 
+    /// Override the logging level.
+    #[clap(short, long, value_enum)]
+    logging_level: Option<LogLevel>,
+
     #[clap(subcommand)]
     subcommand: Commands,
 }
@@ -146,4 +164,25 @@ enum Commands {
         #[clap(short, long, default_value = "./messages.json")]
         file_path: String,
     },
+}
+
+#[derive(clap::ValueEnum, Clone)]
+enum LogLevel {
+    Trace,
+    Debug,
+    Info,
+    Warn,
+    Error,
+}
+
+impl From<LogLevel> for LevelFilter {
+    fn from(level: LogLevel) -> Self {
+        match level {
+            LogLevel::Trace => LevelFilter::TRACE,
+            LogLevel::Debug => LevelFilter::DEBUG,
+            LogLevel::Info => LevelFilter::INFO,
+            LogLevel::Warn => LevelFilter::WARN,
+            LogLevel::Error => LevelFilter::ERROR,
+        }
+    }
 }
