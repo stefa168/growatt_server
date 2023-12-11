@@ -111,18 +111,25 @@ impl Server {
 
         let time = Local::now();
 
-        sqlx::query!(
-            "INSERT INTO remote_messages (raw, time) VALUES ($1, $2)",
+        let r = sqlx::query!(
+            "INSERT INTO remote_messages (raw, time) VALUES ($1, $2) RETURNING id",
             bytes,
             time
         )
-        .execute(&self.db_pool)
-        .await
-        .unwrap();
+        .fetch_one(&self.db_pool)
+        .await;
+
+        if let Err(e) = r {
+            error!(error=%e);
+            return Ok(data);
+        }
+
+        let id = r.unwrap().id;
 
         info!(
-            "New message received from remote, {} bytes long.",
-            data_length
+            "New message received from remote, {} bytes long. ID = {}",
+            data_length - 8,
+            id
         );
         debug!(
             "Message data: {}",
