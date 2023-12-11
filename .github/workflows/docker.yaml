@@ -83,8 +83,11 @@ jobs:
           provenance: true
           labels: ${{ steps.meta.outputs.labels }}
           # https://docs.docker.com/build/ci/github-actions/cache/
-          cache-from: type=registry,ref=user/app:buildcache
-          cache-to: type=registry,ref=user/app:buildcache,mode=max
+          cache-from: type=registry,ref=stefa168/growatt_server:buildcache
+          cache-to: type=registry,ref=stefa168/growatt_server:buildcache,mode=max
+#          # https://docs.docker.com/build/ci/github-actions/cache/#github-cache
+#          cache-from: type=gha
+#          cache-to: type=gha,mode=max
 
 
       - name: Scan the image
