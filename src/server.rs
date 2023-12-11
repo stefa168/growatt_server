@@ -41,7 +41,7 @@ impl Server {
         }
     }
 
-    #[instrument(skip(self), name = "inverter_data_handler")]
+    #[instrument(skip(self, data), name = "inverter_data_handler")]
     async fn handle_inverter_data<'a>(&self, data: &'a [u8]) -> anyhow::Result<&'a [u8]> {
         let bytes = utils::unscramble_data(data, None)?;
 
@@ -104,7 +104,7 @@ impl Server {
         Ok(data)
     }
 
-    #[instrument(skip(self), name = "remote_data_handler")]
+    #[instrument(skip(self, data), name = "remote_data_handler")]
     async fn handle_remote_data<'a>(&self, data: &'a [u8]) -> anyhow::Result<&'a [u8]> {
         let bytes = utils::unscramble_data(data, None)?;
         let data_length = bytes.len();
