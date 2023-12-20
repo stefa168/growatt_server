@@ -1,7 +1,20 @@
+# The directory containing the known inverters mappings (Optional, defaults to ./inverters)
+inverters_dir: ./inverters
+# The port on which we're expecting to receive data from the inverters (Optional, defaults to 5279)
+listen_port: 5279
+# The address of the Growatt server (Optional, defaults to server.growatt.com:5279)
+remote_address: server.growatt.com:5279
+
+# Optional section regarding the logging settings
 logging:
+  # The minimum log level (Optional, defaults to INFO)
+  # Possible values: TRACE, DEBUG, INFO, WARN, ERROR
   log_level: INFO
+  # The directory where the logs will be stored (Optional, defaults to ./logs)
   log_directory: ./logs
 
+# Required section regarding the database settings.
+# All fields are required.
 database:
   username: postgres
   password: password

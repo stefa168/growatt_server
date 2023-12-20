@@ -65,12 +65,13 @@ async fn main() -> Result<()> {
         mappings: Vec<GrowattV6EnergyFragment>,
     }
 
-    let mappings_string = log_error!(fs::read_to_string(&inverters_dir)
-        .await
-        .with_context(|| format!(
-            "Could not load inverters definitions from {}",
-            &inverters_dir
-        )))?;
+    let mappings_string =
+        log_error!(fs::read_to_string(&inverters_dir)
+            .await
+            .with_context(|| format!(
+                "Could not load inverters definitions from {}",
+                &inverters_dir
+            )))?;
     let mapping_file: MappingFile = log_error!(serde_yaml::from_str(&mappings_string))?;
     let inverter: Arc<Vec<GrowattV6EnergyFragment>> = Arc::new(mapping_file.mappings);
 

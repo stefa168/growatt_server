@@ -1,8 +1,8 @@
 version: "3.9"
 services:
   growatt_server:
-#    image: stefa168/growatt_server:latest
-    build: .
+    image: stefa168/growatt_server:latest
+#    build: .
     ports:
       - "5279:5279/tcp"
     volumes:

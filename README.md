@@ -8,7 +8,9 @@ Readme template from https://github.com/othneildrew/Best-README-Template
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 
 [//]: # ([![Contributors][contributors-shield]][contributors-url])
+
 [//]: # ([![Forks][forks-shield]][forks-url])
+
 [//]: # ([![Stargazers][stars-shield]][stars-url])
 [![GPL3 License][license-shield]][license-url]
 [![Issues][issues-shield]][issues-url]
@@ -21,13 +23,15 @@ Readme template from https://github.com/othneildrew/Best-README-Template
 <h1 align="center">GrowattServer</h1>
 
   <p align="center">
-    A server to intercept Growatt Inverters and Smart Energy Meters messages in order to use them locally.
+    Intercept messages from Growatt inverters and use them locally! 
     <br />
     <!--<a href="https://github.com/stefa168/growatt_server"><strong>Explore the docs »</strong></a>-->
     <br />
     <a href="https://github.com/stefa168/growatt_server/issues">Report Bug</a>
     ·
     <a href="https://github.com/stefa168/growatt_server/issues">Request Feature</a>
+    ·
+    <a href="https://github.com/stefa168/growatt_server/releases/latest">Latest Release</a>
   </p>
 </div>
 
@@ -36,87 +40,107 @@ Readme template from https://github.com/othneildrew/Best-README-Template
 [//]: # ([![Product Name Screen Shot][product-screenshot]]&#40;https://example.com&#41;)
 
 This project aims to allow Growatt Inverters owners to take full ownership of their systems.
-This can be for various reasons; at first it was conceived to be able to get data from the inverters with as little changes as possible to the system.
+This can be for various reasons:
 
-Since the inverters by themselves do not have the capability to connect to the internet, they need a middleman to query them and report the data online.
-There are excellent projects that replace the middleman with a custom device that can interrogate the inverter(s) via RS485, however it may not be the best solution, especially if the system is made of multiple inverters.
+- Lack of internet connectivity
+- Privacy concerns
+- Data ownership
+
+At the same time, not all users may want or be able to replace parts of their system to have it behave as they'd want
+to.
+
+Since the inverters by themselves do not have the capability to connect to the internet, they need a middleman to query
+them and report the data online.
+There are excellent projects that replace the middleman with a custom device that can interrogate the inverter(s) via
+RS485, however it may not be the best solution, especially if the system is made of multiple inverters.
 
 In this case, the other option is to intercept the messages of the middleman and act as a second one ourselves.
-This way, the messages are decoded, and sent via MQTT or similar means (planned) to whatever system that may consume the data.
+This way, the messages are decoded, and sent via MQTT or similar means (planned) to whatever system that may consume the
+data.
 
-Currently, the project allows for the messages exchanged between the system and Growatt's server to be forwarded, but it is planned to be able to take it offline for complete control. 
+Currently, the project allows for the messages exchanged between the system and Growatt's server to be forwarded by
+doing as little modifications as possible.
+It is planned to be able to disconnect the system from the internet for complete control.
 
-It is known that there are different protocol versions used by Growatt devices. 
-Right now the project can "understand" Protocol V6, however as soon as data from other protocol versions will be available, the project will be updated to support them.
+It is known that there are different protocol versions used by Growatt devices.
+Right now the project can "understand" **Protocol V6** (in particular, for SPH series inverters), however as soon as
+data from other protocol versions will be available, the project will be updated to support them.
 
 ## Getting Started
 
-Given the current project status, no standalone runtime is available for download, but they're planned for the near future.
+### Please read this first
 
-Right now the only way available is to pull the repository and compile it.
-There is a docker image, but it is currently updated only during testing, so to follow the latest version right now it is suggested to pull directly from the repository.
+Right now the project is in a very early stage, and it is not ready for production use.
+Still, it is possible to use it for non-critical systems and to test it.
+I am using it on my system, and it is working fine; however, I cannot guarantee that it will work for you too.
 
-It is planned to supply executables (GNU/Linux only) and a Docker image.
+I'd be glad to receive feedback, and to help you set it up if you need it.
+
+Please consider the releases that I generate as the "stable" versions, and the dev branch as the "unstable" ones.
+I am personally pushing the releases to my system, so usually, they don't have any main or breaking issues.
+
+During the project lifetime, I'm planning on releasing only GNU/Linux executables and corresponding Docker images.
 
 ### Prerequisites
 
-Once the executable will be released here on GitHub, it will be sufficient to download it and run it alongside the `inverters` configuration directory, which contains mappings for the data returned by the inverters.
+- A system running GNU/Linux (tested on Ubuntu 22.04) or Docker
+- A compatible Growatt inverter (tested on two SPH10000 TL3 BH-UP with a Smart Energy Meter)
+- TCP Port 5279 free on your system
+- A Postgres database (optional in the future) with the TimescaleDB extension (included in the docker-compose file)
 
-### Installation
+### Set-up
 
-#### From sources
+There will be some steps involved, which will be listed here:
 
-I expect you to know what you're doing. You'll need to:
+1. Docker setup
+2. Configuration
 
-1. Pull the repository:
-    ```shell
-   git clone https://github.com/stefa168/growatt_server.git
-   ```
-2. [Install the Rust toolchain](https://www.rust-lang.org/tools/install)
-3. ```shell
-    cd growatt_server
-    cargo install --path .
-    ```
+Unfortunately, right now the only "official" way to set up the server is to use Docker.
+It helps a lot to reduce the number of variables that can cause issues, and it is easier to set up.
 
-#### Docker
+Let's start with the Docker setup.
 
-You can use the following compose sample:
+### Docker setup
 
-```yaml
-version: "3.9"
-services:
-  growatt_server:
-    image: stefa168/growatt_server:latest
-    build: .
-    ports:
-      - "5279:5279/tcp"
-    volumes:
-      - ./inverters:/usr/local/bin/inverters
-      - config.yaml:/usr/local/bin/config.yaml
-    environment:
-      LOG_LEVEL: INFO
-```
+We will be using the docker image present on the [Docker Hub](https://hub.docker.com/r/stefa168/growatt_server) or
+the [GitHub Container Registry](https://github.com/stefa168/growatt_server/pkgs/container/growatt_server).
 
----
+Consider using the release marked as `latest` for the most stable version.
 
-Please note that the `inverters` folder is mandatory, and must contain the (currently only) mapping file.
+Then, prepare the docker-compose file. You can use the one present in this repository as a template.
 
-<!-- USAGE EXAMPLES -->
+In the docker-compose file you'll also find the configuration for a TimescaleDB database.
+The server currently works only with PostgreSQL databases; Timescale is useful because the server produces a lot of
+daily data.
+Plus, buckets and time-series are a good fit for the data produced by the server.
+
+### Configuration
+
+Create a `.secrets` folder in the same directory as the docker-compose file. Here we'll put secrets that we don't want
+to be saved directly in the compose file. You can use the `.postgres-password` file as an example. More
+details [here](https://docs.docker.com/compose/use-secrets/).
+
+Configure the username and password for the database as you like.
+
+Then, create a `config.yaml` file in the same directory as the docker-compose file. You can use the `config.yaml` file
+present in this repository as an example.
+
 ## Usage
 
-To start the server it is simply a matter of running the executable.
-By default, it looks for a configuration file in the same directory, however it can be changed with the `-c` or `--config_path` optional parameter.
+Starting the server is simply a matter of running the executable.
+By default, it looks for a configuration file in the same directory, however it can be changed with the `-c`
+or `--config_path` optional parameter.
 
-Please take a look at the default [configuration file for more information](config.yaml). (Soon they will be listed here too)
+Please take a look at the default [configuration file for more information](config.yaml).
 
-If a log level different from `INFO` is necessary, set the environment variable `LOG_LEVEL` to the required level (`DEBUG`, `TRACE`, etc.)
+If a log level different from `INFO` is necessary, set the environment variable `LOG_LEVEL` to the required
+level (`DEBUG`, `TRACE`, etc.)
 
 The server will relay data to the endpoint specified in the configuration file.
 It defaults to Growatt's servers on `server.growatt.com`.
 
 For more command-line options, use the `--help` option.
 
-<!-- ROADMAP -->
 ## Roadmap
 
 - [ ] Message interception
@@ -126,6 +150,8 @@ For more command-line options, use the `--help` option.
     - [ ] Impersonator
     - Protocols
         - [x] Protocol v6
+            - [x] SPH Inverters
+            - [ ] Other Inverters
         - [ ] ?
 - [ ] Data
     - [x] Storage
@@ -133,24 +159,29 @@ For more command-line options, use the `--help` option.
     - [ ] Home Assistant
 - [ ] Frontend
 
-See the [open issues](https://github.com/stefa168/growatt_server/issues) for a full list of proposed features (and known issues).
+See the [open issues](https://github.com/stefa168/growatt_server/issues) for a full list of proposed features (and known
+issues).
 
 <!-- CONTRIBUTING -->
+
 ## Contributing
 
-Contributions are vital to the Open Source ecosystem. 
+Contributions are vital to the Open Source ecosystem.
 If you have any suggestion or improvement, please submit it!
 
 You can open an issue, or fork the repository and then make a pull request with your new features and suggestions.
 
-The commit messages are expected to follow the [Conventional Commits format](https://www.conventionalcommits.org/en/v1.0.0/).
+The commit messages are expected to follow
+the [Conventional Commits format](https://www.conventionalcommits.org/en/v1.0.0/).
 
 <!-- LICENSE -->
+
 ## License
 
 Distributed under the GNU GPL3 License. See `LICENSE.md` for more information.
 
 <!-- CONTACT -->
+
 ## Contact
 
 Stefano Vittorio Porta - @stefa168 on Twitter and Telegram
@@ -158,6 +189,7 @@ Stefano Vittorio Porta - @stefa168 on Twitter and Telegram
 Project Link: [https://github.com/stefa168/growatt_server](https://github.com/stefa168/growatt_server)
 
 <!-- ACKNOWLEDGMENTS -->
+
 ## Acknowledgments
 
 * [Protocol Analysis, thanks to Johan Vromans' article](https://www.vromans.org/software/sw_growatt_wifi_protocol.html)
@@ -165,14 +197,15 @@ Project Link: [https://github.com/stefa168/growatt_server](https://github.com/st
 * [PyGrowatt](https://github.com/aaronjbrown/PyGrowatt)
 * [Readme Template](https://github.com/othneildrew/Best-README-Template)
 
-
-
-
-
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
 [issues-shield]: https://img.shields.io/github/issues/stefa168/growatt_server.svg?logo=github
+
 [issues-url]: https://github.com/stefa168/growatt_server/issues
+
 [license-shield]: https://www.gnu.org/graphics/gplv3-or-later-sm.png
+
 [license-url]: https://github.com/stefa168/growatt_server/blob/master/LICENSE.md
+
 [build-shield]: https://img.shields.io/github/actions/workflow/status/stefa168/growatt_server/rust.yml?logo=rust
