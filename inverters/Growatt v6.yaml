@@ -1,0 +1,573 @@
+# Growatt V6 Mappings for SPH series hybrid Inverters
+#
+# The offset is calculated from the start of the byte blob.
+# The length is measured in Bytes.
+mappings:
+  - name: Logger SN
+    offset: 0
+    length: 30
+    type: string
+  - name: Inverter SN
+    offset: 30
+    length: 30
+    type: string
+  - name: Date
+    offset: 60
+    length: 6
+    type: date
+  - name: Inverter Status
+    offset: 71
+    length: 2
+    type: int
+  - name: Panels Power In
+    offset: 73
+    length: 4
+    type: float
+    fraction: 10
+    unit: W
+  - name: PV1 Voltage
+    offset: 77
+    length: 2
+    type: float
+    fraction: 10
+    unit: V
+  - name: PV1 Current
+    offset: 79
+    length: 2
+    type: float
+    fraction: 10
+    unit: A
+  - name: PV1 Power
+    offset: 81
+    length: 4
+    type: float
+    fraction: 10
+    unit: W
+  - name: PV2 Voltage
+    offset: 85
+    length: 2
+    type: float
+    fraction: 10
+    unit: V
+  - name: PV2 Current
+    offset: 87
+    length: 2
+    type: float
+    fraction: 10
+    unit: A
+  - name: PV2 Power
+    offset: 89
+    length: 4
+    type: float
+    fraction: 10
+    unit: W
+  - name: PV3 Voltage
+    offset: 93
+    length: 2
+    type: float
+    fraction: 10
+    unit: V
+  - name: PV3 Current
+    offset: 95
+    length: 2
+    type: float
+    fraction: 10
+    unit: A
+  - name: PV3 Power
+    offset: 97
+    length: 4
+    type: float
+    fraction: 10
+    unit: W
+  - name: PV4 Voltage
+    offset: 101
+    length: 2
+    type: float
+    fraction: 10
+    unit: V
+  - name: PV4 Current
+    offset: 103
+    length: 2
+    type: float
+    fraction: 10
+    unit: A
+  - name: PV4 Power
+    offset: 105
+    length: 4
+    type: float
+    fraction: 10
+    unit: W
+  - name: PV5 Voltage
+    offset: 109
+    length: 2
+    type: float
+    fraction: 10
+    unit: V
+  - name: PV5 Current
+    offset: 111
+    length: 2
+    type: float
+    fraction: 10
+    unit: A
+  - name: PV5 Power
+    offset: 113
+    length: 4
+    type: float
+    fraction: 10
+    unit: W
+  - name: Inverter Power Output
+    offset: 141
+    length: 4
+    type: float
+    fraction: 10
+    unit: W
+  - name: PV Frequency
+    offset: 145
+    length: 2
+    type: float
+    fraction: 100
+    unit: Hz
+  - name: P1 Grid Voltage
+    offset: 147
+    length: 2
+    type: float
+    fraction: 10
+    unit: V
+  - name: P1 Grid Current
+    offset: 149
+    length: 2
+    type: float
+    fraction: 10
+    unit: A
+  - name: P1 Grid Power
+    offset: 151
+    length: 4
+    type: float
+    fraction: 10
+    unit: W
+  - name: P2 Grid Voltage
+    offset: 155
+    length: 2
+    type: float
+    fraction: 10
+    unit: V
+  - name: P2 Grid Current
+    offset: 157
+    length: 2
+    type: float
+    fraction: 10
+    unit: A
+  - name: P2 Grid Power
+    offset: 159
+    length: 4
+    type: float
+    fraction: 10
+    unit: W
+  - name: P3 Grid Voltage
+    offset: 163
+    length: 2
+    type: float
+    fraction: 10
+    unit: V
+  - name: P3 Grid Current
+    offset: 165
+    length: 2
+    type: float
+    fraction: 10
+    unit: A
+  - name: P3 Grid Power
+    offset: 167
+    length: 4
+    type: float
+    fraction: 10
+    unit: W
+  - name: eactoday
+    offset: 177
+    length: 4
+    type: float
+    fraction: 10
+    unit: kWh
+    comment: Today's system PV production
+  - name: eactotal
+    offset: 181
+    length: 4
+    type: float
+    fraction: 10
+    unit: kWh
+    comment: Total system's PV production
+  - name: Total Online Time
+    offset: 185
+    length: 4
+    type: float
+    fraction: 2
+    unit: s
+  - name: epvtotal
+    offset: 253
+    length: 4
+    type: float
+    fraction: 10
+    unit: kWh
+  - name: epv1today
+    offset: 189
+    length: 4
+    type: float
+    fraction: 10
+    unit: kWh
+  - name: epv1total
+    offset: 193
+    length: 4
+    type: float
+    fraction: 10
+    unit: kWh
+  - name: epv2today
+    offset: 201
+    length: 4
+    type: float
+    fraction: 10
+    unit: kWh
+  - name: epv2total
+    offset: 205
+    length: 4
+    type: float
+    fraction: 10
+    unit: kWh
+  - name: epv3today
+    offset: 209
+    length: 4
+    type: float
+    fraction: 10
+    unit: kWh
+  - name: epv3total
+    offset: 213
+    length: 4
+    type: float
+    fraction: 10
+    unit: kWh
+  - name: epv4today
+    offset: 217
+    length: 4
+    type: float
+    fraction: 10
+    unit: kWh
+  - name: epv4total
+    offset: 221
+    length: 4
+    type: float
+    fraction: 10
+    unit: kWh
+  - name: epv5today
+    offset: 225
+    length: 4
+    type: float
+    fraction: 10
+    unit: kWh
+  - name: epv5total
+    offset: 229
+    length: 4
+    type: float
+    fraction: 10
+    unit: kWh
+  - name: pvtemperature
+    offset: 257
+    length: 2
+    type: float
+    fraction: 10
+    unit: "°C"
+  - name: pvipmtemperature
+    offset: 259
+    length: 2
+    type: float
+    fraction: 10
+    unit: "°C"
+  - name: pvboosttemp
+    offset: 261
+    length: 2
+    type: float
+    fraction: 10
+    unit: "°C"
+  - name: bat_dsp
+    offset: 265
+    length: 2
+    type: float
+    fraction: 10
+    unit: V
+  - name: pbusvolt
+    offset: 267
+    length: 2
+    type: float
+    fraction: 10
+    unit: V
+  - name: "#nbusvolt"
+    offset: 269
+    length: 2
+    type: float
+    fraction: 10
+  - name: "#ipf"
+    offset: 271
+    length: 2
+    type: float
+    fraction: 10
+  - name: "#realoppercent"
+    offset: 273
+    length: 2
+    type: float
+    fraction: 100
+  - name: "#opfullwatt"
+    offset: 275
+    length: 4
+    type: float
+    fraction: 10
+  - name: "#deratingmode"
+    offset: 279
+    length: 2
+    type: float
+    fraction: 1
+  - name: "#faultcode"
+    offset: 281
+    length: 4
+    type: int
+  - name: "#remotectrlen"
+    offset: 285
+    length: 2
+    type: int
+  - name: "#remotectrlpwr"
+    offset: 287
+    length: 2
+    type: int
+  - name: "#warning"
+    offset: 289
+    length: 4
+    type: int
+  - name: "#binwarn"
+    offset: 193
+    length: 2
+    type: int
+  - name: eacharge_today
+    offset: 295
+    length: 4
+    type: float
+    fraction: 10
+  - name: eacharge_total
+    offset: 299
+    length: 4
+    type: float
+    fraction: 10
+  - name: batterytype
+    offset: 309
+    length: 2
+    type: float
+    fraction: 1
+  - name: uwsysworkmode
+    offset: 325
+    length: 2
+    type: float
+    fraction: 1
+  - name: systemfaultword0
+    offset: 327
+    length: 2
+    type: float
+    fraction: 1
+  - name: systemfaultword1
+    offset: 329
+    length: 2
+    type: float
+    fraction: 1
+  - name: systemfaultword2
+    offset: 331
+    length: 2
+    type: float
+    fraction: 1
+  - name: systemfaultword3
+    offset: 333
+    length: 2
+    type: float
+    fraction: 1
+  - name: systemfaultword4
+    offset: 335
+    length: 2
+    type: float
+    fraction: 1
+  - name: systemfaultword5
+    offset: 337
+    length: 2
+    type: float
+    fraction: 1
+  - name: systemfaultword6
+    offset: 339
+    length: 2
+    type: float
+    fraction: 1
+  - name: systemfaultword7
+    offset: 341
+    length: 2
+    type: float
+    fraction: 1
+  - name: pdischarge1
+    offset: 343
+    length: 4
+    type: float
+    fraction: 10
+    comment: Probably POWER DISCHARGE, for the battery
+  - name: p1charge1
+    offset: 347
+    length: 4
+    type: float
+    fraction: 10
+    comment: Probably Power Charge, for the battery
+  - name: vbat
+    offset: 351
+    length: 2
+    type: float
+    fraction: 10
+    unit: V
+  - name: SOC
+    offset: 353
+    length: 2
+    type: float
+    fraction: 1
+    unit: "%"
+  - name: pactouserr
+    offset: 355
+    length: 4
+    type: float
+    fraction: 10
+    comment: No value reported
+  - name: "#pactousers"
+    offset: 359
+    length: 4
+    type: float
+    fraction: 10
+    comment: No value reported
+  - name: "#pactousert"
+    offset: 363
+    length: 4
+    type: float
+    fraction: 10
+    comment: No value reported
+  - name: pactousertot
+    offset: 367
+    length: 4
+    type: float
+    fraction: 10
+    comment: No value reported
+  - name: pactogridr
+    offset: 371
+    length: 4
+    type: float
+    fraction: 10
+    comment: No value reported
+  - name: "#pactogrids"
+    offset: 375
+    length: 4
+    type: float
+    fraction: 10
+    comment: absurdly large numbers reported
+  - name: "#pactogridt"
+    offset: 379
+    length: 4
+    type: float
+    fraction: 10
+    comment: absurdly large numbers reported
+  - name: pactogridtot
+    offset: 383
+    length: 4
+    type: float
+    fraction: 10
+  - name: plocaloadr
+    offset: 387
+    length: 4
+    type: float
+    fraction: 10
+  - name: "#plocaloads"
+    offset: 391
+    length: 4
+    type: float
+    fraction: 10
+  - name: "#plocaloadt"
+    offset: 395
+    length: 4
+    type: float
+    fraction: 10
+  - name: plocaloadtot
+    offset: 399
+    length: 4
+    type: float
+    fraction: 10
+  - name: "#ipm"
+    offset: 403
+    length: 2
+    type: float
+    fraction: 10
+  - name: "#battemp"
+    offset: 405
+    length: 2
+    type: float
+    fraction: 10
+    unit: "°C"
+  - name: spdspstatus
+    offset: 407
+    length: 2
+    type: float
+    fraction: 10
+  - name: spbusvolt
+    offset: 409
+    length: 2
+    type: float
+    fraction: 10
+    unit: V
+  - name: etouser_tod
+    offset: 413
+    length: 4
+    type: float
+    fraction: 10
+  - name: etouser_tot
+    offset: 417
+    length: 4
+    type: float
+    fraction: 10
+  - name: etogrid_tod
+    offset: 421
+    length: 4
+    type: float
+    fraction: 10
+  - name: etogrid_tot
+    offset: 425
+    length: 4
+    type: float
+    fraction: 10
+  - name: edischarge1_tod
+    offset: 429
+    length: 4
+    type: float
+    fraction: 10
+    unit: kWh
+  - name: edischarge1_tot
+    offset: 433
+    length: 4
+    type: float
+    fraction: 10
+    unit: kWh
+  - name: eharge1_tod
+    offset: 437
+    length: 4
+    type: float
+    fraction: 10
+    unit: kWh
+  - name: eharge1_tot
+    offset: 441
+    length: 4
+    type: float
+    fraction: 10
+    unit: kWh
+  - name: elocalload_tod
+    offset: 445
+    length: 4
+    type: float
+    fraction: 10
+    unit: kWh
+  - name: elocalload_tot
+    offset: 449
+    length: 4
+    type: float
+    fraction: 10
+    unit: kWh

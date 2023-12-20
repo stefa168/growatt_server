@@ -58,17 +58,21 @@ async fn main() -> Result<()> {
     let inverters_dir = config
         .inverters_dir
         .clone()
-        .unwrap_or("./inverters/Growatt v6.json".to_string());
+        .unwrap_or("./inverters/Growatt v6.yaml".to_string());
 
-    let json = log_error!(fs::read_to_string(&inverters_dir)
+    #[derive(serde::Deserialize)]
+    struct MappingFile {
+        mappings: Vec<GrowattV6EnergyFragment>,
+    }
+
+    let mappings_string = log_error!(fs::read_to_string(&inverters_dir)
         .await
         .with_context(|| format!(
             "Could not load inverters definitions from {}",
             &inverters_dir
         )))?;
-
-    let inverter: Arc<Vec<GrowattV6EnergyFragment>> =
-        Arc::new(log_error!(serde_json::from_str(&json))?);
+    let mapping_file: MappingFile = log_error!(serde_yaml::from_str(&mappings_string))?;
+    let inverter: Arc<Vec<GrowattV6EnergyFragment>> = Arc::new(mapping_file.mappings);
 
     let res = match cli.subcommand {
         Commands::Start => run_server(config, inverter).await,
