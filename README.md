@@ -13,6 +13,8 @@ Readme template from https://github.com/othneildrew/Best-README-Template
 [![GPL3 License][license-shield]][license-url]
 [![Issues][issues-shield]][issues-url]
 ![build-shield]
+![Docker Image Version (latest semver)](https://img.shields.io/docker/v/stefa168/growatt_server?sort=semver&logo=docker)
+
 
 <div align="center">
 
