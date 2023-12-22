@@ -49,7 +49,8 @@ async fn main() -> Result<()> {
     let _logger_guard = init_logging(&cli, &config)?;
 
     // Finally starting!
-    info!("
+    info!(
+        "
 
     {} version {} started!
     Copyright (C) 2023-2024 - Stefano Vittorio Porta
@@ -160,11 +161,11 @@ fn init_logging(cli: &Cli, config: &Arc<Config>) -> Result<WorkerGuard> {
 
 #[derive(clap::Parser)]
 #[clap(
-name = "growatt_server",
-version,
-author,
-about,
-subcommand_required = true
+    name = "growatt_server",
+    version,
+    author,
+    about,
+    subcommand_required = true
 )]
 struct Cli {
     /// Path to the config file to use to run the server
