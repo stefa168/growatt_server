@@ -106,3 +106,36 @@ macro_rules! log_error {
         }
     };
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_modbus_crc16() {
+        let data = hex_to_bytes("000E00060003010400");
+        let crc = modbus_crc16(&data);
+        assert_eq!(crc, 0x5ED8);
+    }
+
+    #[test]
+    fn test_unscramble_data() {
+        let data = hex_to_bytes("001C00060003020400CB87");
+        let unscrambled = unscramble_data(&data, None).unwrap();
+        assert_eq!(unscrambled, hex_to_bytes("001c00060003020447b9e8"));
+    }
+
+    #[test]
+    fn test_hex_bytes_to_ascii() {
+        let data = [0x41, 0x53, 0x43, 0x49, 0x49];
+        let ascii = hex_bytes_to_ascii(&data);
+        assert_eq!(ascii, "ASCII");
+    }
+
+    #[test]
+    fn test_hex_to_bytes() {
+        let hex = "4142434445";
+        let bytes = hex_to_bytes(hex);
+        assert_eq!(bytes, [0x41, 0x42, 0x43, 0x44, 0x45]);
+    }
+}
