@@ -76,7 +76,7 @@ impl Server {
 
         // First save the complete message
         let r = sqlx::query!("INSERT INTO inverter_messages (raw, type, header, time, inverter_sn) VALUES ($1, $2, $3, $4, $5) returning id",
-            datamessage.raw, serde_json::to_string(&datamessage.data_type).unwrap(), datamessage.header, datamessage.time, datamessage.serial_number)
+            datamessage.raw, &datamessage.data_type.to_string(), datamessage.header, datamessage.time, datamessage.serial_number)
             .fetch_one(&self.db_pool)
             // todo handle unlikely scenarios
             .await;
