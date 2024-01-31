@@ -50,6 +50,7 @@ pub(crate) async fn run_decrypt(
             MessageType::Ping => DataMessage::placeholder(&bytes, MessageType::Ping),
             MessageType::Configure => DataMessage::placeholder(&bytes, MessageType::Configure),
             MessageType::Identify => DataMessage::placeholder(&bytes, MessageType::Identify),
+            MessageType::MeterData => DataMessage::meter_data(&bytes),
             MessageType::Unknown => DataMessage::placeholder(&bytes, MessageType::Unknown),
         }
         .unwrap();

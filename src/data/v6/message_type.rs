@@ -1,10 +1,11 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-#[derive(Debug, sqlx::Type, Serialize, Deserialize)]
+#[derive(Debug, sqlx::Type, Serialize, Deserialize, PartialEq)]
 pub enum MessageType {
     Data3,
     Data4,
+    MeterData,
     Ping,
     Configure,
     Identify,
@@ -19,6 +20,7 @@ impl From<u8> for MessageType {
             0x16 => MessageType::Ping,
             0x18 => MessageType::Configure,
             0x19 => MessageType::Identify,
+            0x1B => MessageType::MeterData,
             _ => MessageType::Unknown,
         }
     }
@@ -29,6 +31,7 @@ impl fmt::Display for MessageType {
         match self {
             MessageType::Data3 => write!(f, "Data3"),
             MessageType::Data4 => write!(f, "Data4"),
+            MessageType::MeterData => write!(f, "MeterData"),
             MessageType::Ping => write!(f, "Ping"),
             MessageType::Configure => write!(f, "Configure"),
             MessageType::Identify => write!(f, "Identify"),

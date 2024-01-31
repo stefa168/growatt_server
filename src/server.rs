@@ -67,6 +67,7 @@ impl Server {
             MessageType::Ping => DataMessage::placeholder(&bytes, MessageType::Ping),
             MessageType::Configure => DataMessage::placeholder(&bytes, MessageType::Configure),
             MessageType::Identify => DataMessage::placeholder(&bytes, MessageType::Identify),
+            MessageType::MeterData => DataMessage::meter_data(&bytes),
             MessageType::Unknown => DataMessage::placeholder(&bytes, MessageType::Unknown),
         };
 
@@ -74,6 +75,8 @@ impl Server {
 
         debug!("Message type: {:?}", &datamessage.data_type);
 
+        // Here we save the data we deserialized. We do this in two steps, and without a transaction because if we
+        // manage to save the message but not the data, we can still recover the message later.
         // First save the complete message
         let r = sqlx::query!("INSERT INTO inverter_messages (raw, type, header, time, inverter_sn) VALUES ($1, $2, $3, $4, $5) returning id",
             datamessage.raw, &datamessage.data_type.to_string(), datamessage.header, datamessage.time, datamessage.serial_number)

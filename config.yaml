@@ -1,5 +1,5 @@
 # The directory containing the known inverters mappings (Optional, defaults to ./inverters)
-inverters_dir: ./inverters
+inverters_dir: ./inverters/Growatt v6.yaml
 # The port on which we're expecting to receive data from the inverters (Optional, defaults to 5279)
 listen_port: 5279
 # The address of the Growatt server (Optional, defaults to server.growatt.com:5279)
