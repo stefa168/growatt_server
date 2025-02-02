@@ -145,8 +145,6 @@ Distributed under the GNU GPL3 License. See `LICENSE.md` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Stefano Vittorio Porta - [@stefa168](https://twitter.com/stefa168)
-
 Project Link: [https://github.com/stefa168/growatt_server](https://github.com/stefa168/growatt_server)
 
 
