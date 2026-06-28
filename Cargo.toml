@@ -31,6 +31,7 @@ tracing-appender = "0.2.3"
 tracing-futures = "0.2.5"
 tracing-unwrap = "0.10.0"
 tracing-panic = "0.1.1"
+binrw = "0.15.1"
 
 [dependencies.sqlx]
 version = "0.7.2"
