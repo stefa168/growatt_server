@@ -95,18 +95,6 @@ fn print_bytes(bytes: &[u8], n: usize) {
     });
 }
 
-macro_rules! log_error {
-    ($expr:expr) => {
-        match $expr {
-            Ok(val) => Ok(val),
-            Err(err) => {
-                tracing::error!("{:?}", err);
-                Err(err)
-            }
-        }
-    };
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

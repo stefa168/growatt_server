@@ -15,6 +15,7 @@ use tracing_subscriber::{fmt, EnvFilter};
 use data::v6::GrowattV6EnergyFragment;
 
 use crate::config::Config;
+use crate::log_ext::LogErrorExt;
 use crate::misc::run_decrypt;
 use crate::server::run_server;
 
@@ -23,11 +24,13 @@ mod utils;
 mod config;
 mod data;
 mod data_message;
+mod log_ext;
 mod misc;
 mod server;
 
 const BUF_SIZE: usize = 65535;
 
+/// This main function acts as the entrypoint to the different modes that the software supports.
 #[tokio::main]
 #[instrument]
 async fn main() -> Result<()> {
@@ -40,10 +43,10 @@ async fn main() -> Result<()> {
     );
     let config_path: &str = cli.config_path.as_str();
 
-    let config = log_error!(config::load_from_yaml(config_path).await.context(format!(
-        "Failed to load the configuration file from {}",
-        config_path
-    )))?;
+    let config = config::load_from_yaml(config_path)
+        .await
+        .with_context(|| format!("Failed to load the configuration file from {config_path}"))
+        .log_error()?;
 
     // Set up logging
     let _logger_guard = init_logging(&cli, &config)?;
@@ -53,7 +56,7 @@ async fn main() -> Result<()> {
         "
 
     {} version {} started!
-    Copyright (C) 2023-2024 - Stefano Vittorio Porta
+    Copyright (C) 2023-2026 - Stefano Vittorio Porta
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -62,11 +65,11 @@ async fn main() -> Result<()> {
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+    along with this program. If not, see <https://www.gnu.org/licenses/>.
     ",
         crate_name!(),
         crate_version!()
@@ -78,30 +81,31 @@ async fn main() -> Result<()> {
     }
     let inverters_dir = config
         .inverters_dir
-        .clone()
-        .unwrap_or("./inverters/Growatt v6.yaml".to_string());
+        .as_deref()
+        .unwrap_or("./inverters/Growatt v6.yaml");
 
+    // Temporary structure, will be extracted in the future
     #[derive(serde::Deserialize)]
     struct MappingFile {
         mappings: Vec<GrowattV6EnergyFragment>,
     }
 
-    let mappings_string =
-        log_error!(fs::read_to_string(&inverters_dir)
-            .await
-            .with_context(|| format!(
-                "Could not load inverters definitions from {}",
-                &inverters_dir
-            )))?;
-    let mapping_file: MappingFile = log_error!(serde_yaml::from_str(&mappings_string))?;
+    let mappings_string = fs::read_to_string(&inverters_dir)
+        .await
+        .with_context(|| format!("Could not load inverters definitions from {inverters_dir}"))
+        .log_error()?;
+    let mapping_file: MappingFile = serde_yaml::from_str(&mappings_string)
+        .with_context(|| format!("Could not parse inverters definitions from {inverters_dir}"))
+        .log_error()?;
+
+    // todo substitute with a list/map of inverters
     let inverter: Arc<Vec<GrowattV6EnergyFragment>> = Arc::new(mapping_file.mappings);
 
-    let res = match cli.subcommand {
+    match cli.subcommand {
         Commands::Start => run_server(config, inverter).await,
         Commands::Decrypt { file_path } => run_decrypt(file_path, config, inverter).await,
-    };
-
-    log_error!(res)
+    }
+    .log_error()
 }
 
 fn init_logging(cli: &Cli, config: &Arc<Config>) -> Result<WorkerGuard> {
