@@ -1,17 +1,19 @@
 use anyhow::{Context, Result};
 
-pub fn unscramble_data(data: &[u8], mask: Option<&str>) -> Result<Vec<u8>> {
-    let ndecdata = data.len();
-    let mask: &[u8] = mask.unwrap_or("Growatt").as_bytes();
+const DEFAULT_MASK: &str = "Growatt";
 
-    // Start the decrypt routine
+pub fn unscramble_data(data: &[u8], mask: Option<&str>) -> Result<Vec<u8>> {
+    let len = data.len();
+    let mask: &[u8] = mask.unwrap_or(DEFAULT_MASK).as_bytes();
+
+    // Start the decoding routine
     // Isolate the already unscrambled header
     let mut unscrambled: Vec<u8> = data
         .get(..8)
-        .with_context(|| format!("Data received too short: {} bytes instead of 8", data.len()))?
+        .with_context(|| format!("Data received too short: {} bytes instead of 8", len))?
         .to_vec();
 
-    for (i, j) in (8..ndecdata).zip((0..mask.len()).cycle()) {
+    for (i, j) in (8..len).zip((0..mask.len()).cycle()) {
         let dec_byte = data[i] ^ mask[j];
         unscrambled.push(dec_byte);
     }
